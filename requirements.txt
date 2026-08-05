@@ -4,3 +4,5 @@ langchain-core
 langchain-chroma
 langchain-huggingface
 sentence-transformers
+openai
+python-dotenv

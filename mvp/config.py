@@ -8,6 +8,7 @@ OUTPUTS_DIR = BASE_DIR / "outputs"
 DEFAULT_GOLD_PATH = OUTPUTS_DIR / "bert_gold.md"
 
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+RERANKER_MODEL = "BAAI/bge-reranker-base"
 DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 150
 
