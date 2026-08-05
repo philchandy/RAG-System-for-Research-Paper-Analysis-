@@ -6,14 +6,37 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from pathlib import Path
-import shutil
+import re
 
 from config import CHROMA_DIR, EMBEDDING_MODEL
 
-def build_vector_store_from_pdf(pdf_path):
+
+def make_document_id(pdf_path):
+    """
+    Creates a stable document id from the uploaded file name.
+    """
+    stem = Path(pdf_path).stem.lower()
+    document_id = re.sub(r"[^a-z0-9]+", "-", stem).strip("-")
+    return document_id or "uploaded-document"
+
+
+def remove_existing_document(vector_store, document_id):
+    """
+    Removes prior chunks for the same document id before re-indexing it.
+    """
+    existing = vector_store.get(where={"document_id": document_id})
+    existing_ids = existing.get("ids", [])
+    if existing_ids:
+        vector_store.delete(ids=existing_ids)
+
+
+def build_vector_store_from_pdf(pdf_path, document_id=None):
     """
     Extracts text from a PDF, chunks it, and builds a vector store using Chroma.
     """
+    pdf_path = Path(pdf_path)
+    document_id = document_id or make_document_id(pdf_path)
+
     # Extract text from PDF
     text = extract_text_from_pdf(pdf_path)
     
@@ -25,7 +48,9 @@ def build_vector_store_from_pdf(pdf_path):
         Document(
             page_content=chunk["text"],
             metadata={
-                "chunk_id": f"chunk_{index:04d}",
+                "document_id": document_id,
+                "source": pdf_path.name,
+                "chunk_id": f"{document_id}_chunk_{index:04d}",
                 "section": chunk["section"],
             },
         )
@@ -35,14 +60,15 @@ def build_vector_store_from_pdf(pdf_path):
     # Initialize embeddings
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     
-    # Create Chroma vector store
-    shutil.rmtree(CHROMA_DIR, ignore_errors=True)
-    CHROMA_DIR.mkdir(exist_ok=True)
+    # Create or update shared Chroma vector store
+    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
-    vector_store = Chroma.from_documents(
-        documents,
-        embeddings,
-        persist_directory=CHROMA_DIR
+    vector_store = Chroma(
+        persist_directory=CHROMA_DIR,
+        embedding_function=embeddings,
     )
+    remove_existing_document(vector_store, document_id)
+    vector_store.add_documents(documents)
     
-    print(f"Vector store built and saved to {vector_store}")
+    print(f"Indexed document '{document_id}' in shared vector store: {vector_store}")
+    return document_id

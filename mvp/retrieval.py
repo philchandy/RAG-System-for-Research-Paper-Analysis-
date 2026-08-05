@@ -21,7 +21,7 @@ def infer_preferred_sections(query):
 
     return []
 
-def retrieve_top_k(query, k=5):
+def retrieve_top_k(query, k=5, document_id=None):
     """
     Retrieves the top-k most similar documents from the vector store for a given query.
     """
@@ -31,8 +31,10 @@ def retrieve_top_k(query, k=5):
         embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     )
     
+    search_filter = {"document_id": document_id} if document_id else None
+
     # Retrieve top-k documents
-    results = vector_store.similarity_search(query, k=max(k * 4, 10))
+    results = vector_store.similarity_search(query, k=max(k * 4, 10), filter=search_filter)
 
     preferred_sections = infer_preferred_sections(query)
     if preferred_sections:
@@ -45,20 +47,24 @@ def retrieve_top_k(query, k=5):
     
     return results[:k]
 
-def generate_schema(query, k=3):
+def generate_schema(query, k=3, document_id=None):
     """
     Generates a grounded schema dictionary from retrieved evidence.
     """
-    results = retrieve_top_k(query, k=k)
+    results = retrieve_top_k(query, k=k, document_id=document_id)
 
     evidence_snippets = []
     chunk_ids = []
     sections = []
+    sources = []
+    document_ids = []
 
     for doc in results:
         evidence_snippets.append(doc.page_content[:400])
         chunk_ids.append(doc.metadata.get("chunk_id"))
         sections.append(doc.metadata.get("section"))
+        sources.append(doc.metadata.get("source"))
+        document_ids.append(doc.metadata.get("document_id"))
 
     normalized_query = query.lower()
     if any(keyword in normalized_query for keyword in ["problem", "motivation", "limitation", "why"]):
@@ -76,21 +82,25 @@ def generate_schema(query, k=3):
         "evidence_snippets": evidence_snippets,
         "chunk_ids": chunk_ids,
         "sections": sections,
+        "sources": sources,
+        "document_ids": document_ids,
     }
 
-def retrieve_summary_evidence(summary_queries, top_k=3):
+def retrieve_summary_evidence(summary_queries, top_k=3, document_id=None):
     """
     Retrieves top chunks for each fixed summary query and returns a structured dict.
     """
     summary_evidence = {}
 
     for field, query in summary_queries.items():
-        retrieved_docs = retrieve_top_k(query, k=top_k)
+        retrieved_docs = retrieve_top_k(query, k=top_k, document_id=document_id)
         summary_evidence[field] = {
             "query": query,
             "retrieved_chunks": [
                 {
                     "chunk_id": doc.metadata.get("chunk_id"),
+                    "document_id": doc.metadata.get("document_id"),
+                    "source": doc.metadata.get("source"),
                     "section": doc.metadata.get("section"),
                     "evidence": doc.page_content[:400],
                 }
@@ -107,6 +117,9 @@ def build_summary_dict(summary_evidence):
     summary = {}
 
     for field, payload in summary_evidence.items():
-        summary[field] = generate_schema(payload["query"], k=len(payload["retrieved_chunks"]))
+        document_id = None
+        if payload["retrieved_chunks"]:
+            document_id = payload["retrieved_chunks"][0].get("document_id")
+        summary[field] = generate_schema(payload["query"], k=len(payload["retrieved_chunks"]), document_id=document_id)
 
     return summary
