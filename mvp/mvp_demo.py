@@ -2,11 +2,16 @@ import argparse
 from pathlib import Path
 
 import torch
+
+from ingestion import extract_text_from_pdf
+from chunking import chunk_text
+from indexing import build_vector_store_from_pdf
+from retrieval import generate_schema, retrieve_summary_evidence, build_summary_dict
+from evaluation import load_gold_references, evaluate_summary_dict
 from config import SUMMARY_QUERIES
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_PDF_PATH = BASE_DIR / "data" / "raw" / "bert.pdf"
 DEFAULT_QUERY = "What are the main contributions of this document?"
 
 
@@ -15,8 +20,8 @@ def parse_args():
     parser.add_argument(
         "--pdf",
         type=Path,
-        default=DEFAULT_PDF_PATH,
-        help="Path to the research PDF to index. Defaults to data/raw/bert.pdf for the old demo document.",
+        required=True,
+        help="Path to the uploaded research PDF to index.",
     )
     parser.add_argument(
         "--query",
@@ -48,10 +53,8 @@ def print_environment():
     print("CUDA available:", torch.cuda.is_available())
 
 
-def index_document(pdf_path):
-    from ingestion import extract_text_from_pdf
-    from chunking import chunk_text
-    from indexing import build_vector_store_from_pdf
+def index_uploaded_document(pdf_path):
+    pdf_path = resolve_pdf_path(pdf_path)
 
     print("\n--- PDF Extraction ---")
     extracted_text = extract_text_from_pdf(pdf_path)
@@ -71,10 +74,10 @@ def index_document(pdf_path):
     print("\n--- Vector Store Build ---")
     build_vector_store_from_pdf(pdf_path)
 
+    return pdf_path
+
 
 def answer_query(query, top_k):
-    from retrieval import generate_schema
-
     print("\n--- Query Retrieval ---")
     result = generate_schema(query, k=top_k)
     print("Query:", result["query"])
@@ -91,9 +94,6 @@ def answer_query(query, top_k):
 
 
 def run_bert_evaluation():
-    from retrieval import retrieve_summary_evidence, build_summary_dict
-    from evaluation import load_gold_references, evaluate_summary_dict
-
     print("\n--- Optional BERT Gold Evaluation ---")
     summary_evidence = retrieve_summary_evidence(SUMMARY_QUERIES, top_k=3)
     summary_dict = build_summary_dict(summary_evidence)
@@ -110,10 +110,9 @@ def run_bert_evaluation():
 
 def main():
     args = parse_args()
-    pdf_path = resolve_pdf_path(args.pdf)
 
     print_environment()
-    index_document(pdf_path)
+    index_uploaded_document(args.pdf)
     answer_query(args.query, args.top_k)
 
     if args.bert_eval:
