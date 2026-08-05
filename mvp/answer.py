@@ -63,7 +63,7 @@ def build_grounded_answer_prompt(question, evidence_items):
             "",
             "Answer the question using only the provided evidence.",
             "If the evidence does not contain the answer, say:",
-            f'"{MISSING_ANSWER}"',
+            "I cannot find that in the uploaded document.",
             "",
             "Cite chunk IDs for every factual claim using the exact chunk ID in brackets, like [bert_chunk_0010].",
             "Do not use outside knowledge.",
@@ -144,3 +144,8 @@ def generate_grounded_answer(question, evidence_items, llm=None):
         return MISSING_ANSWER
 
     return answer
+
+
+def generate_answer_by_mode(question, evidence_items, answer_mode="extractive"):
+    llm = call_openai if answer_mode == "openai" else None
+    return generate_grounded_answer(question, evidence_items, llm=llm)
