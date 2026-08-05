@@ -6,7 +6,7 @@ import torch
 from ingestion import extract_text_from_pdf
 from chunking import chunk_text
 from indexing import build_vector_store_from_pdf, make_document_id
-from retrieval import generate_schema, retrieve_summary_evidence, build_summary_dict
+from retrieval import answer_query as retrieve_answer_for_query, retrieve_summary_evidence, build_summary_dict
 from evaluation import load_gold_references, evaluate_summary_dict
 from config import SUMMARY_QUERIES
 
@@ -85,7 +85,7 @@ def index_uploaded_document(pdf_path, document_id=None):
 
 def answer_query(query, top_k, document_id=None):
     print("\n--- Query Retrieval ---")
-    result = generate_schema(query, k=top_k, document_id=document_id)
+    result = retrieve_answer_for_query(query, top_k=top_k, document_id=document_id)
     print("Query:", result["query"])
     if document_id:
         print("Filtered document ID:", document_id)
