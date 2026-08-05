@@ -102,8 +102,6 @@ def split_into_sections(text):
 
     cleaned_sections = []
     for section in sections:
-        if section["section"] == "Front Matter":
-            continue
         normalized = normalize_pdf_text(section["text"])
         if normalized:
             cleaned_sections.append({

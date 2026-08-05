@@ -35,6 +35,12 @@ def parse_args():
         help="Number of evidence chunks to retrieve.",
     )
     parser.add_argument(
+        "--answer-mode",
+        choices=["extractive", "openai"],
+        default="extractive",
+        help="Use extractive evidence snippets or OpenAI-generated grounded answers.",
+    )
+    parser.add_argument(
         "--document-id",
         help="Optional id for this uploaded document. Defaults to a slug from the PDF file name.",
     )
@@ -101,12 +107,18 @@ def index_uploaded_document(pdf_path, document_id=None):
     return document_id
 
 
-def answer_query(query, top_k, document_id=None):
+def answer_query(query, top_k, document_id=None, answer_mode="extractive"):
     print("\n--- Query Retrieval ---")
-    result = retrieve_answer_for_query(query, top_k=top_k, document_id=document_id)
+    result = retrieve_answer_for_query(
+        query,
+        top_k=top_k,
+        document_id=document_id,
+        answer_mode=answer_mode,
+    )
     print("Query:", result["query"])
     if document_id:
         print("Filtered document ID:", document_id)
+    print("Answer mode:", answer_mode)
     print("Answer from retrieved evidence:")
     print(result["answer"])
 
@@ -121,7 +133,7 @@ def answer_query(query, top_k, document_id=None):
     return result
 
 
-def run_gold_evaluation(gold_path, document_id=None):
+def run_gold_evaluation(gold_path, document_id=None, answer_mode="extractive"):
     gold_path = resolve_project_path(gold_path)
 
     print("\n--- Optional Gold Benchmark Evaluation ---")
@@ -133,7 +145,7 @@ def run_gold_evaluation(gold_path, document_id=None):
         return
 
     summary_evidence = retrieve_summary_evidence(SUMMARY_QUERIES, top_k=3, document_id=document_id)
-    summary_dict = build_summary_dict(summary_evidence)
+    summary_dict = build_summary_dict(summary_evidence, answer_mode=answer_mode)
     evaluation = evaluate_summary_dict(summary_dict, gold_references)
 
     for field, metrics in evaluation.items():
@@ -148,10 +160,10 @@ def main():
 
     print_environment()
     document_id = index_uploaded_document(args.pdf, document_id=args.document_id)
-    answer_query(args.query, args.top_k, document_id=document_id)
+    answer_query(args.query, args.top_k, document_id=document_id, answer_mode=args.answer_mode)
 
     if args.evaluate:
-        run_gold_evaluation(args.gold_file, document_id=document_id)
+        run_gold_evaluation(args.gold_file, document_id=document_id, answer_mode=args.answer_mode)
 
 if __name__ == "__main__":
     main()

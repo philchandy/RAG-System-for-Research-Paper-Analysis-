@@ -1,8 +1,35 @@
+import os
 import re
-
+from importlib import import_module
+from pathlib import Path
+from dotenv import load_dotenv
+import openai as OpenAI
 
 MISSING_ANSWER = "I cannot find that in the uploaded document."
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
+def call_openai(prompt, model="gpt-4o-mini"):
+
+    load_dotenv(dotenv_path=ENV_PATH)
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError("OPENAI_API_KEY is not set. Add it to final_proj/.env or your environment.")
+    
+    client = OpenAI.OpenAI()
+    res = client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": "You answer only from provided evidence and cite chunk IDs."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0,
+    )
+    return res.choices[0].message.content.strip()
 
 def format_evidence_for_prompt(evidence_items):
     """
@@ -39,7 +66,7 @@ def build_grounded_answer_prompt(question, evidence_items):
             "If the evidence does not contain the answer, say:",
             f'"{MISSING_ANSWER}"',
             "",
-            "Cite chunk IDs for every factual claim using [chunk_id].",
+            "Cite chunk IDs for every factual claim using the exact chunk ID in brackets, like [bert_chunk_0010].",
             "Do not use outside knowledge.",
             "Do not guess.",
             "",
@@ -69,12 +96,15 @@ def validate_chunk_citations(answer_text, evidence_items):
     if normalized_answer == MISSING_ANSWER:
         return True
 
-    cited_chunk_ids = extract_cited_chunk_ids(normalized_answer)
-    if not cited_chunk_ids:
-        return False
-
     valid_chunk_ids = {str(item["chunk_id"]) for item in evidence_items}
-    return cited_chunk_ids <= valid_chunk_ids
+    bracketed_values = extract_cited_chunk_ids(normalized_answer)
+    cited_chunk_ids = bracketed_values & valid_chunk_ids
+    invalid_chunk_citations = {
+        value for value in bracketed_values
+        if "chunk" in value.lower() and value not in valid_chunk_ids
+    }
+
+    return bool(cited_chunk_ids) and not invalid_chunk_citations
 
 
 def generate_extractive_answer(evidence_items):
