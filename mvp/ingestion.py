@@ -93,10 +93,16 @@ def split_into_sections(text):
             "text": "\n".join(current_lines).strip(),
         })
 
-    has_named_sections = any(section["section"] != "Front Matter" for section in sections)
+    detected_sections = [section for section in sections if section["section"] != "Front Matter"]
+    if not detected_sections:
+        normalized = normalize_pdf_text("\n\n".join(section["text"] for section in sections))
+        if normalized:
+            return [{"section": "Document", "text": normalized}]
+        return []
+
     cleaned_sections = []
     for section in sections:
-        if section["section"] == "Front Matter" and has_named_sections:
+        if section["section"] == "Front Matter":
             continue
         normalized = normalize_pdf_text(section["text"])
         if normalized:
