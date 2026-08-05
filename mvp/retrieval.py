@@ -1,5 +1,6 @@
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+from answer import generate_grounded_answer
 from config import CHROMA_DIR, EMBEDDING_MODEL
 
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,23 +31,30 @@ def answer_query(user_query, top_k=5, document_id=None):
     sections = []
     sources = []
     document_ids = []
+    evidence_items = []
 
-    for doc in results:
+    for index, doc in enumerate(results, start=1):
+        chunk_id = doc.metadata.get("chunk_id") or f"retrieved_{index}"
+        section = doc.metadata.get("section")
+        source = doc.metadata.get("source")
+        document_id = doc.metadata.get("document_id")
+
         evidence_snippets.append(doc.page_content[:400])
-        chunk_ids.append(doc.metadata.get("chunk_id"))
-        sections.append(doc.metadata.get("section"))
-        sources.append(doc.metadata.get("source"))
-        document_ids.append(doc.metadata.get("document_id"))
+        chunk_ids.append(chunk_id)
+        sections.append(section)
+        sources.append(source)
+        document_ids.append(document_id)
+        evidence_items.append(
+            {
+                "chunk_id": chunk_id,
+                "document_id": document_id,
+                "source": source,
+                "section": section,
+                "text": doc.page_content,
+            }
+        )
 
-    normalized_query = user_query.lower()
-    if any(keyword in normalized_query for keyword in ["problem", "motivation", "limitation", "why"]):
-        answer = evidence_snippets[0] if evidence_snippets else "Not found in provided evidence"
-    elif any(keyword in normalized_query for keyword in ["method", "approach", "model", "architecture"]):
-        answer = evidence_snippets[0] if evidence_snippets else "Not found in provided evidence"
-    elif any(keyword in normalized_query for keyword in ["result", "performance", "dataset", "benchmark", "evaluation"]):
-        answer = evidence_snippets[0] if evidence_snippets else "Not found in provided evidence"
-    else:
-        answer = evidence_snippets[0] if evidence_snippets else "Not found in provided evidence"
+    answer = generate_grounded_answer(user_query, evidence_items)
 
     return {
         "query": user_query,

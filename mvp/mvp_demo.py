@@ -8,7 +8,7 @@ from chunking import chunk_text
 from indexing import build_vector_store_from_pdf, make_document_id
 from retrieval import answer_query as retrieve_answer_for_query, retrieve_summary_evidence, build_summary_dict
 from evaluation import load_gold_references, evaluate_summary_dict
-from config import SUMMARY_QUERIES
+from config import DEFAULT_GOLD_PATH, SUMMARY_QUERIES
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,9 +39,21 @@ def parse_args():
         help="Optional id for this uploaded document. Defaults to a slug from the PDF file name.",
     )
     parser.add_argument(
-        "--bert-eval",
+        "--evaluate",
         action="store_true",
-        help="Run the old BERT gold-reference evaluation after indexing. Optional benchmark-only path.",
+        help="Run optional benchmark evaluation against manually written gold references.",
+    )
+    parser.add_argument(
+        "--bert-eval",
+        dest="evaluate",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--gold-file",
+        type=Path,
+        default=DEFAULT_GOLD_PATH,
+        help="Markdown file containing manually written gold references for benchmark evaluation.",
     )
     return parser.parse_args()
 
@@ -50,6 +62,12 @@ def resolve_pdf_path(pdf_path):
     if pdf_path.is_absolute():
         return pdf_path
     return (BASE_DIR / pdf_path).resolve()
+
+
+def resolve_project_path(path):
+    if path.is_absolute():
+        return path
+    return (BASE_DIR / path).resolve()
 
 
 def print_environment():
@@ -103,12 +121,19 @@ def answer_query(query, top_k, document_id=None):
     return result
 
 
-def run_bert_evaluation(document_id=None):
-    print("\n--- Optional BERT Gold Evaluation ---")
+def run_gold_evaluation(gold_path, document_id=None):
+    gold_path = resolve_project_path(gold_path)
+
+    print("\n--- Optional Gold Benchmark Evaluation ---")
+    print("Gold reference file:", gold_path)
+
+    gold_references = load_gold_references(gold_path)
+    if not any(gold_references.values()):
+        print("No gold references found. Skipping benchmark evaluation.")
+        return
+
     summary_evidence = retrieve_summary_evidence(SUMMARY_QUERIES, top_k=3, document_id=document_id)
     summary_dict = build_summary_dict(summary_evidence)
-
-    gold_references = load_gold_references()
     evaluation = evaluate_summary_dict(summary_dict, gold_references)
 
     for field, metrics in evaluation.items():
@@ -125,8 +150,8 @@ def main():
     document_id = index_uploaded_document(args.pdf, document_id=args.document_id)
     answer_query(args.query, args.top_k, document_id=document_id)
 
-    if args.bert_eval:
-        run_bert_evaluation(document_id=document_id)
+    if args.evaluate:
+        run_gold_evaluation(args.gold_file, document_id=document_id)
 
 if __name__ == "__main__":
     main()

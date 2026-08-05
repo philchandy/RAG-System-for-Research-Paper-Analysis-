@@ -1,9 +1,10 @@
 import re
-from config import GOLD_PATH
+from answer import MISSING_ANSWER
+from config import DEFAULT_GOLD_PATH
 
-def load_gold_references(gold_path=GOLD_PATH):
+def load_gold_references(gold_path=DEFAULT_GOLD_PATH):
     """
-    Loads the gold reference bullets grouped by field from the markdown file.
+    Loads optional benchmark gold-reference bullets grouped by field from markdown.
     """
     field_names = ["problem", "method", "dataset", "results", "limitations"]
     gold_references = {field: [] for field in field_names}
@@ -54,7 +55,7 @@ def score_field_against_gold(field_name, generated_field, gold_references):
     coverage_hit = bool(gold_keywords & generated_keywords)
 
     hallucination = False
-    if answer_text.strip().lower() == "not found in provided evidence":
+    if answer_text.strip() == MISSING_ANSWER:
         hallucination = False
     elif gold_keywords and not coverage_hit:
         hallucination = True
