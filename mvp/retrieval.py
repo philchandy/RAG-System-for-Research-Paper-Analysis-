@@ -1,3 +1,5 @@
+from enum import Enum
+
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -7,30 +9,28 @@ from config import CHROMA_DIR, EMBEDDING_MODEL, RERANKER_MODEL
 
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
-FRONT_MATTER_QUERY_TERMS = [
-    "author",
-    "authors",
-    "wrote",
-    "written by",
-    "title",
-]
 
-BROAD_OVERVIEW_TERMS = [
-    "summarize",
-    "overview",
-    "main",
-    "overall",
-    "what methods",
-    "which methods",
-    "what approaches",
-    "which approaches",
-    "talk about",
-    "discuss",
-    "review",
-]
+class Intent(Enum):
+    SUMMARY = "summary"
+    METHODS = "methods"
+    LIMITATIONS = "limitations"
+    APPLICATIONS = "applications"
+    COMPARE = "compare"
+    AUTHOR = "author"
+    SECTION = "section"
+    UNKNOWN = "unknown"
 
 METHOD_QUERY_TERMS = ["methods", "approaches", "framework", "architecture", "modules"]
-DEFAULT_QUERY_VARIANTS = ["summary", "main ideas", "methods", "findings", "limitations"]
+INTENT_QUERY_TERMS = {
+    Intent.SUMMARY: ["summary", "main ideas", "contributions", "findings", "overview"],
+    Intent.METHODS: METHOD_QUERY_TERMS,
+    Intent.LIMITATIONS: ["limitations", "challenges", "failures", "weaknesses", "future work"],
+    Intent.APPLICATIONS: ["applications", "use cases", "tasks", "domains", "practical uses"],
+    Intent.COMPARE: ["comparison", "differences", "advantages", "tradeoffs", "versus"],
+    Intent.AUTHOR: ["authors", "title", "front matter", "paper header", "affiliations"],
+    Intent.SECTION: ["section", "heading", "part", "topic", "outline"],
+    Intent.UNKNOWN: ["summary", "main ideas", "methods", "findings", "limitations"],
+}
 RRF_K = 60
 _RERANKER = None
 
@@ -49,14 +49,25 @@ def get_reranker():
     return _RERANKER
 
 
-def is_front_matter_query(query):
+def classify_intent(query):
     normalized_query = query.lower()
-    return any(term in normalized_query for term in FRONT_MATTER_QUERY_TERMS)
 
+    if any(term in normalized_query for term in ["author", "authors", "wrote", "written by", "title"]):
+        return Intent.AUTHOR
+    if any(term in normalized_query for term in ["compare", "comparison", "versus", "vs", "difference", "different"]):
+        return Intent.COMPARE
+    if any(term in normalized_query for term in ["limitation", "limitations", "challenge", "challenges", "fail", "failure", "weakness"]):
+        return Intent.LIMITATIONS
+    if any(term in normalized_query for term in ["application", "applications", "use case", "use cases", "used for", "where is"]):
+        return Intent.APPLICATIONS
+    if any(term in normalized_query for term in ["method", "methods", "approach", "approaches", "framework", "architecture", "module", "modules"]):
+        return Intent.METHODS
+    if any(term in normalized_query for term in ["section", "chapter", "part", "where does", "which section"]):
+        return Intent.SECTION
+    if any(term in normalized_query for term in ["summarize", "summary", "overview", "main", "overall", "contribution", "contributions"]):
+        return Intent.SUMMARY
 
-def is_broad_overview_query(query):
-    normalized_query = query.lower()
-    return any(term in normalized_query for term in BROAD_OVERVIEW_TERMS)
+    return Intent.UNKNOWN
 
 
 def append_unique_documents(target, documents):
@@ -69,13 +80,21 @@ def append_unique_documents(target, documents):
         existing_chunk_ids.add(chunk_id)
 
 
+def build_queries(intent, question):
+    """
+    Builds five vector-search queries for the detected user intent.
+    """
+    query_terms = INTENT_QUERY_TERMS[intent]
+    if intent == Intent.UNKNOWN:
+        return [question] + query_terms[:4]
+    return query_terms[:5]
+
+
 def generate_search_queries(query):
     """
-    Routes a user question into five vector-search queries.
+    Backward-compatible wrapper for callers that only need routed queries.
     """
-    if is_broad_overview_query(query):
-        return METHOD_QUERY_TERMS
-    return [query] + DEFAULT_QUERY_VARIANTS[:4]
+    return build_queries(classify_intent(query), query)
 
 
 def rerank_search_results(search_result_sets, limit):
@@ -144,7 +163,8 @@ def retrieve_top_k(query, k=5, document_id=None):
     
     search_filter = {"document_id": document_id} if document_id else None
 
-    search_queries = generate_search_queries(query)
+    intent = classify_intent(query)
+    search_queries = build_queries(intent, query)
     result_limit = max(k, 12) if len(search_queries) > 1 else k
     results = retrieve_multi_query(
         vector_store,
@@ -154,7 +174,7 @@ def retrieve_top_k(query, k=5, document_id=None):
     )
     results = cross_encoder_rerank(query, results, limit=result_limit)
 
-    if is_front_matter_query(query):
+    if intent == Intent.AUTHOR:
         front_matter = retrieve_front_matter(vector_store, document_id=document_id)
         if front_matter:
             front_matter_id = front_matter.metadata.get("chunk_id")
