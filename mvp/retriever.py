@@ -99,23 +99,36 @@ def filter_documents_by_section(documents, section_filter):
     return [doc for doc in documents if section_matches(doc.metadata.get("section"), section_filter)]
 
 
+def make_document_filter(document_ids):
+    """
+    Builds a Chroma where-filter for one or many document ids.
+    """
+    if not document_ids:
+        return None
+    if isinstance(document_ids, str):
+        document_ids = [document_ids]
+    if len(document_ids) == 1:
+        return {"document_id": document_ids[0]}
+    return {"document_id": {"$in": list(document_ids)}}
+
+
 def retrieve_front_matter(vector_store, document_id=None):
-    where_filter = {"document_id": document_id} if document_id else None
+    where_filter = make_document_filter(document_id)
     stored = vector_store.get(where=where_filter, include=["documents", "metadatas"])
 
-    for text, metadata in zip(stored.get("documents", []), stored.get("metadatas", [])):
-        if metadata.get("section") == "Front Matter":
-            return Document(page_content=text, metadata=metadata)
-
-    return None
+    front_matter_docs = [
+        Document(page_content=text, metadata=metadata)
+        for text, metadata in zip(stored.get("documents", []), stored.get("metadatas", []))
+        if metadata.get("section") == "Front Matter"
+    ]
+    return front_matter_docs
 
 
 def retrieve_metadata_route(vector_store, route, document_id=None):
     if route.section_filter == ["Front Matter"]:
-        front_matter = retrieve_front_matter(vector_store, document_id=document_id)
-        return [front_matter] if front_matter else []
+        return retrieve_front_matter(vector_store, document_id=document_id)
 
-    where_filter = {"document_id": document_id} if document_id else None
+    where_filter = make_document_filter(document_id)
     stored = vector_store.get(where=where_filter, include=["documents", "metadatas"])
     results = []
 
@@ -133,7 +146,7 @@ def retrieve(route, question, k=5, document_id=None):
     if not route.use_vector_search:
         return retrieve_metadata_route(vector_store, route, document_id=document_id)[:result_limit]
 
-    search_filter = {"document_id": document_id} if document_id else None
+    search_filter = make_document_filter(document_id)
     results = retrieve_multi_query(
         vector_store,
         route.queries,

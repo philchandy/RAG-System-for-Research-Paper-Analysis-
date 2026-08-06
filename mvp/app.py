@@ -20,8 +20,9 @@ def parse_args():
     parser.add_argument(
         "--pdf",
         type=Path,
+        nargs="+",
         required=True,
-        help="Path to the uploaded research PDF to index.",
+        help="Path(s) to one or more research PDFs to index and query together.",
     )
     parser.add_argument(
         "--query",
@@ -42,7 +43,7 @@ def parse_args():
     )
     parser.add_argument(
         "--document-id",
-        help="Optional id for this uploaded document. Defaults to a slug from the PDF file name.",
+        help="Optional id for the uploaded document (single --pdf only). Defaults to a slug from each PDF file name.",
     )
     parser.add_argument(
         "--evaluate",
@@ -107,17 +108,17 @@ def index_uploaded_document(pdf_path, document_id=None):
     return document_id
 
 
-def answer_query(query, top_k, document_id=None, answer_mode="extractive"):
+def answer_query(query, top_k, document_ids=None, answer_mode="extractive"):
     print("\n--- Query Retrieval ---")
     result = retrieve_answer_for_query(
         query,
         top_k=top_k,
-        document_id=document_id,
+        document_id=document_ids,
         answer_mode=answer_mode,
     )
     print("Query:", result["query"])
-    if document_id:
-        print("Filtered document ID:", document_id)
+    if document_ids:
+        print("Filtered document IDs:", ", ".join(document_ids))
     print("Answer mode:", answer_mode)
     print("Answer from retrieved evidence:")
     print(result["answer"])
@@ -159,11 +160,18 @@ def main():
     args = parse_args()
 
     print_environment()
-    document_id = index_uploaded_document(args.pdf, document_id=args.document_id)
-    answer_query(args.query, args.top_k, document_id=document_id, answer_mode=args.answer_mode)
+
+    if args.document_id and len(args.pdf) > 1:
+        raise SystemExit("--document-id can only be used with a single --pdf.")
+
+    document_ids = []
+    for pdf_path in args.pdf:
+        document_ids.append(index_uploaded_document(pdf_path, document_id=args.document_id))
+
+    answer_query(args.query, args.top_k, document_ids=document_ids, answer_mode=args.answer_mode)
 
     if args.evaluate:
-        run_gold_evaluation(args.gold_file, document_id=document_id, answer_mode=args.answer_mode)
+        run_gold_evaluation(args.gold_file, document_id=document_ids, answer_mode=args.answer_mode)
 
 if __name__ == "__main__":
     main()
