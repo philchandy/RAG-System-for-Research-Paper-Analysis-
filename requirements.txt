@@ -4,5 +4,6 @@ langchain-core
 langchain-chroma
 langchain-huggingface
 sentence-transformers
+rank-bm25
 openai
 python-dotenv

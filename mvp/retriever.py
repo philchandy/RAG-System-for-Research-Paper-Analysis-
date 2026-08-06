@@ -1,6 +1,9 @@
+import re
+
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
+from rank_bm25 import BM25Okapi
 
 from config import CHROMA_DIR, EMBEDDING_MODEL
 from reranker import cross_encoder_rerank
@@ -38,11 +41,47 @@ def rerank_search_results(search_result_sets, limit):
     return [documents_by_chunk_id[chunk_id] for chunk_id in ranked_chunk_ids[:limit]]
 
 
+def tokenize_for_bm25(text):
+    return re.findall(r"[a-z0-9]+", text.lower())
+
+
+def load_bm25_corpus(vector_store, search_filter=None):
+    """
+    Loads stored chunks and builds a BM25 index over their tokenized text.
+    """
+    stored = vector_store.get(where=search_filter, include=["documents", "metadatas"])
+    documents = [
+        Document(page_content=text, metadata=metadata)
+        for text, metadata in zip(stored.get("documents", []), stored.get("metadatas", []))
+    ]
+    if not documents:
+        return None, []
+
+    bm25 = BM25Okapi([tokenize_for_bm25(doc.page_content) for doc in documents])
+    return bm25, documents
+
+
+def bm25_search(bm25, documents, query, k):
+    """
+    Returns the top-k documents for a query ranked by BM25 score.
+    """
+    scores = bm25.get_scores(tokenize_for_bm25(query))
+    ranked = sorted(range(len(documents)), key=lambda i: scores[i], reverse=True)
+    return [documents[i] for i in ranked[:k] if scores[i] > 0]
+
+
 def retrieve_multi_query(vector_store, queries, k, search_filter=None):
     search_result_sets = [
         vector_store.similarity_search(query, k=k, filter=search_filter)
         for query in queries
     ]
+
+    bm25, bm25_documents = load_bm25_corpus(vector_store, search_filter=search_filter)
+    if bm25 is not None:
+        search_result_sets.extend(
+            bm25_search(bm25, bm25_documents, query, k) for query in queries
+        )
+
     return rerank_search_results(search_result_sets, limit=k)
 
 
