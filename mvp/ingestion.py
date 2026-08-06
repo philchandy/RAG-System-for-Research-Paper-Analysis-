@@ -1,5 +1,5 @@
 import re
-from PyPDF2 import PdfReader
+import pymupdf
 
 NUMBERED_SECTION_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+[A-Z].+")
 NAMED_SECTION_HEADERS = {
@@ -57,7 +57,21 @@ def is_section_header(line):
     if lowercase in NAMED_SECTION_HEADERS:
         return True
 
-    return bool(NUMBERED_SECTION_PATTERN.match(stripped))
+    if not NUMBERED_SECTION_PATTERN.match(stripped):
+        return False
+
+    # Reject sentence fragments that happen to start with a number,
+    # such as "0.3 F1 behind fine-tuning the entire model. This".
+    if stripped.endswith((".", ",", ";", ":")):
+        return False
+    if ". " in stripped:
+        return False
+    if stripped.startswith("0"):
+        return False
+    if len(stripped.split()) > 8:
+        return False
+
+    return True
 
 
 def split_into_sections(text):
@@ -111,12 +125,34 @@ def split_into_sections(text):
 
     return cleaned_sections
 
+def extract_page_text(page):
+    """
+    Extracts page text in column-aware reading order.
+
+    Two-column papers break naive y-sorted extraction, so blocks are
+    ordered by column (left of page midline first) and then top-to-bottom.
+    Ligatures (fi, fl) are expanded instead of preserved as single glyphs.
+    """
+    flags = pymupdf.TEXTFLAGS_TEXT & ~pymupdf.TEXT_PRESERVE_LIGATURES
+    blocks = page.get_text("blocks", flags=flags)
+    midline = page.rect.width / 2
+
+    def block_order(block):
+        x0, y0 = block[0], block[1]
+        column = 0 if x0 < midline else 1
+        return (column, y0, x0)
+
+    text_blocks = [block for block in blocks if block[6] == 0]  # text blocks only
+    text_blocks.sort(key=block_order)
+    return "\n".join(block[4] for block in text_blocks)
+
+
 def extract_text_from_pdf(pdf_path):
     """
-    Extracts text from a PDF file using PyPDF2.
+    Extracts text from a PDF file using PyMuPDF (fitz).
     """
-    reader = PdfReader(pdf_path)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() + "\n"
-    return trim_back_matter(text)
+    text_parts = []
+    with pymupdf.open(pdf_path) as doc:
+        for page in doc:
+            text_parts.append(extract_page_text(page))
+    return trim_back_matter("\n".join(text_parts))

@@ -1,4 +1,4 @@
-PyPDF2
+pymupdf
 torch
 langchain-core
 langchain-chroma
