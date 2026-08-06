@@ -45,10 +45,32 @@ def tokenize_for_bm25(text):
     return re.findall(r"[a-z0-9]+", text.lower())
 
 
-def load_bm25_corpus(vector_store, search_filter=None):
+_BM25_CACHE = {}
+
+
+def make_bm25_cache_key(document_ids, stored_ids):
+    """
+    Cache key for a document selection. Including the stored chunk ids
+    invalidates the cache when a document is re-indexed or removed.
+    """
+    if isinstance(document_ids, str):
+        document_ids = [document_ids]
+    id_part = tuple(sorted(document_ids)) if document_ids else ("__all__",)
+    return (id_part, len(stored_ids), hash(tuple(sorted(stored_ids))))
+
+
+def load_bm25_corpus(vector_store, search_filter=None, document_ids=None):
     """
     Loads stored chunks and builds a BM25 index over their tokenized text.
+    Results are cached per document selection and invalidated on re-index.
     """
+    stored_ids = vector_store.get(where=search_filter, include=[]).get("ids", [])
+    cache_key = make_bm25_cache_key(document_ids, stored_ids)
+
+    cached = _BM25_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     stored = vector_store.get(where=search_filter, include=["documents", "metadatas"])
     documents = [
         Document(page_content=text, metadata=metadata)
@@ -58,6 +80,8 @@ def load_bm25_corpus(vector_store, search_filter=None):
         return None, []
 
     bm25 = BM25Okapi([tokenize_for_bm25(doc.page_content) for doc in documents])
+    _BM25_CACHE.clear()  # keep at most one corpus in memory
+    _BM25_CACHE[cache_key] = (bm25, documents)
     return bm25, documents
 
 
@@ -70,13 +94,15 @@ def bm25_search(bm25, documents, query, k):
     return [documents[i] for i in ranked[:k] if scores[i] > 0]
 
 
-def retrieve_multi_query(vector_store, queries, k, search_filter=None):
+def retrieve_multi_query(vector_store, queries, k, search_filter=None, document_ids=None):
     search_result_sets = [
         vector_store.similarity_search(query, k=k, filter=search_filter)
         for query in queries
     ]
 
-    bm25, bm25_documents = load_bm25_corpus(vector_store, search_filter=search_filter)
+    bm25, bm25_documents = load_bm25_corpus(
+        vector_store, search_filter=search_filter, document_ids=document_ids
+    )
     if bm25 is not None:
         search_result_sets.extend(
             bm25_search(bm25, bm25_documents, query, k) for query in queries
@@ -152,6 +178,7 @@ def retrieve(route, question, k=5, document_id=None):
         route.queries,
         k=result_limit,
         search_filter=search_filter,
+        document_ids=document_id,
     )
     unfiltered_results = results
     results = filter_documents_by_section(unfiltered_results, route.section_filter)
