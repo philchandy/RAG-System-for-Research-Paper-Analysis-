@@ -11,10 +11,7 @@ from pathlib import Path
 import torch
 
 from config import DEFAULT_GOLD_PATH
-from pipeline import answer_question, evaluate_against_gold, index_documents
-
-
-DEFAULT_QUERY = "What are the main contributions of this document?"
+from pipeline import answer_question, evaluate_against_gold, index_documents, summarize_document
 
 
 def parse_args():
@@ -28,8 +25,11 @@ def parse_args():
     )
     parser.add_argument(
         "--query",
-        default=DEFAULT_QUERY,
-        help="Question to ask against the indexed document.",
+        default=None,
+        help=(
+            "Ask a single question and exit instead of the default flow "
+            "(index, print the 5-part summary, then prompt for follow-ups)."
+        ),
     )
     parser.add_argument(
         "--top-k",
@@ -91,7 +91,7 @@ def print_index_report(report):
     print(f"Indexed document '{report['document_id']}'.")
 
 
-def print_answer(result):
+def print_answer(result, max_evidence=None):
     print("\n--- Query Retrieval ---")
     print("Query:", result["query"])
     if result["filtered_document_ids"]:
@@ -100,13 +100,42 @@ def print_answer(result):
     print("Answer from retrieved evidence:")
     print(result["answer"])
 
-    for index, evidence in enumerate(result["evidence_snippets"], start=1):
+    evidence_snippets = result["evidence_snippets"]
+    if max_evidence is not None:
+        evidence_snippets = evidence_snippets[:max_evidence]
+
+    for index, evidence in enumerate(evidence_snippets, start=1):
         print(f"\nEvidence {index}:")
         print("Document ID:", result["document_ids"][index - 1])
         print("Source:", result["sources"][index - 1])
         print("Section:", result["sections"][index - 1])
         print("Chunk ID:", result["chunk_ids"][index - 1])
         print(evidence)
+
+
+def print_document_summary(summary):
+    print("\n--- Document Summary ---")
+    for field, result in summary.items():
+        print(f"\n[{field.upper()}]")
+        print(result["answer"])
+
+
+def run_interactive_loop(document_ids, top_k, answer_mode):
+    print("\n--- Follow-up Questions ---")
+    print("Type a question and press Enter. Type 'quit' or 'exit' to stop.")
+
+    while True:
+        try:
+            query = input("\n> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if not query or query.lower() in {"quit", "exit", "q"}:
+            break
+
+        result = answer_question(query, top_k=top_k, document_ids=document_ids, answer_mode=answer_mode)
+        print_answer(result, max_evidence=top_k)
 
 
 def print_evaluation(evaluation, gold_path):
@@ -138,13 +167,23 @@ def main():
         print_index_report(report)
 
     document_ids = [report["document_id"] for report in reports]
-    result = answer_question(
-        args.query,
-        top_k=args.top_k,
-        document_ids=document_ids,
-        answer_mode=args.answer_mode,
-    )
-    print_answer(result)
+
+    if args.query:
+        result = answer_question(
+            args.query,
+            top_k=args.top_k,
+            document_ids=document_ids,
+            answer_mode=args.answer_mode,
+        )
+        print_answer(result, max_evidence=args.top_k)
+    else:
+        summary = summarize_document(
+            document_ids=document_ids,
+            top_k=args.top_k,
+            answer_mode=args.answer_mode,
+        )
+        print_document_summary(summary)
+        run_interactive_loop(document_ids, args.top_k, args.answer_mode)
 
     if args.evaluate:
         evaluation = evaluate_against_gold(

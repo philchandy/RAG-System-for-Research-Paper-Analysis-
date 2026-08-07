@@ -79,6 +79,14 @@ def answer_question(query, top_k=3, document_ids=None, answer_mode="extractive")
     return result
 
 
+def summarize_document(document_ids=None, top_k=3, answer_mode="extractive"):
+    """
+    Builds the structured problem/method/dataset/results/limitations summary.
+    """
+    summary_evidence = retrieve_summary_evidence(SUMMARY_QUERIES, top_k=top_k, document_id=document_ids)
+    return build_summary_dict(summary_evidence, answer_mode=answer_mode)
+
+
 def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3):
     """
     Runs the optional gold benchmark. Returns metrics per summary field,
@@ -89,6 +97,5 @@ def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive"
     if not any(gold_references.values()):
         return None
 
-    summary_evidence = retrieve_summary_evidence(SUMMARY_QUERIES, top_k=top_k, document_id=document_ids)
-    summary_dict = build_summary_dict(summary_evidence, answer_mode=answer_mode)
+    summary_dict = summarize_document(document_ids=document_ids, top_k=top_k, answer_mode=answer_mode)
     return evaluate_summary_dict(summary_dict, gold_references)
