@@ -14,8 +14,8 @@ from pathlib import Path
 import anyio
 from fastapi import FastAPI, HTTPException, UploadFile
 
-from rag import index_document, preload
-from server.schemas import UploadResponse
+from rag import index_document, list_documents, preload
+from server.schemas import DocumentListResponse, UploadResponse
 from server.settings import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, UPLOAD_DIR
 
 
@@ -74,6 +74,15 @@ async def upload_document(file: UploadFile) -> UploadResponse:
         raise HTTPException(status_code=422, detail=f"Failed to index PDF: {error}")
 
     return UploadResponse(status="indexed", report=report)
+
+
+@app.get("/documents", response_model=DocumentListResponse)
+async def get_documents() -> DocumentListResponse:
+    """
+    Lists indexed documents with source filename and chunk counts.
+    """
+    documents = await anyio.to_thread.run_sync(list_documents)
+    return DocumentListResponse(documents=documents)
 
 
 @app.get("/health")

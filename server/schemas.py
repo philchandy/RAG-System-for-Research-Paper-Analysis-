@@ -21,3 +21,13 @@ class IndexReport(BaseModel):
 class UploadResponse(BaseModel):
     status: str
     report: IndexReport
+
+
+class DocumentInfo(BaseModel):
+    document_id: str
+    source: str | None = None
+    chunk_count: int
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentInfo]

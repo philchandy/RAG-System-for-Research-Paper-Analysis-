@@ -12,6 +12,7 @@ from rag.pipeline import (
     evaluate_followups_against_gold,
     index_document,
     index_documents,
+    list_documents,
     summarize_document,
 )
 from rag.resources import preload

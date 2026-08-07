@@ -67,6 +67,28 @@ def index_documents(pdf_paths, document_id=None):
     return [index_document(pdf_path, document_id=document_id) for pdf_path in pdf_paths]
 
 
+def list_documents():
+    """
+    Lists indexed documents with their source filename and chunk count.
+    """
+    from rag.resources import get_vector_store
+
+    stored = get_vector_store().get(include=["metadatas"])
+    documents = {}
+
+    for metadata in stored.get("metadatas", []):
+        document_id = metadata.get("document_id")
+        if not document_id:
+            continue
+        entry = documents.setdefault(
+            document_id,
+            {"document_id": document_id, "source": metadata.get("source"), "chunk_count": 0},
+        )
+        entry["chunk_count"] += 1
+
+    return sorted(documents.values(), key=lambda entry: entry["document_id"])
+
+
 def answer_question(query, top_k=3, document_ids=None, answer_mode="extractive"):
     """
     Answers a question from evidence retrieved across the selected documents.
