@@ -13,6 +13,7 @@ from pathlib import Path
 
 import anyio
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 from rag import answer_question, delete_document, index_document, list_documents, preload, summarize_document
 from server.schemas import (
@@ -24,7 +25,7 @@ from server.schemas import (
     SummarizeResponse,
     UploadResponse,
 )
-from server.settings import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, UPLOAD_DIR
+from server.settings import ALLOWED_CONTENT_TYPES, CORS_ORIGINS, MAX_UPLOAD_BYTES, UPLOAD_DIR
 
 
 @asynccontextmanager
@@ -35,6 +36,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Research Paper RAG API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def safe_pdf_filename(filename):
