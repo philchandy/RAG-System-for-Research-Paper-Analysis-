@@ -13,6 +13,9 @@ dependencies = [
     "rank-bm25",
     "openai",
     "python-dotenv",
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
 ]
 
 [build-system]

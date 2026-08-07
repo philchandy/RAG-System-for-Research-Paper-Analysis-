@@ -31,9 +31,28 @@ Or using plain **venv + pip**:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
 (On Windows: `.\.venv\Scripts\activate` instead of the `source` line.)
+
+## Run the API server
+
+From the root folder with the venv activated:
+
+```bash
+uvicorn server.main:app --reload
+# or with uv
+uv run uvicorn server.main:app --reload
+```
+
+Then upload a PDF and check it indexed:
+
+```bash
+curl -X POST http://127.0.0.1:8000/documents -F "file=@data/raw/your-paper.pdf;type=application/pdf"
+```
+
+Interactive API docs are at http://127.0.0.1:8000/docs.
 
 For OpenAI answer generation, create a `.env` file in the root folder:
 
