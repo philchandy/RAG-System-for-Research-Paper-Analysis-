@@ -1,12 +1,12 @@
-from ingestion import extract_text_from_pdf
-from chunking import chunk_text
+from rag.ingestion import extract_text_from_pdf
+from rag.chunking import chunk_text
 
 from langchain_core.documents import Document
 
 from pathlib import Path
 import re
 
-from resources import get_vector_store
+from rag.resources import get_vector_store
 
 
 def make_document_id(pdf_path):

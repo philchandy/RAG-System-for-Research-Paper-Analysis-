@@ -51,49 +51,49 @@ Run from the root folder. Every command below works two ways:
 Index and query a PDF:
 
 ```bash
-uv run python rag/app.py --pdf data/raw/your-paper.pdf
+uv run python -m rag.app --pdf data/raw/your-paper.pdf
 # or
-python rag/app.py --pdf data/raw/your-paper.pdf
+python -m rag.app --pdf data/raw/your-paper.pdf
 ```
 
 Query multiple PDFs at once (evidence is retrieved across all of them):
 
 ```bash
-uv run python rag/app.py --pdf data/raw/paper-one.pdf data/raw/paper-two.pdf --query "How do these papers differ?"
+uv run python -m rag.app --pdf data/raw/paper-one.pdf data/raw/paper-two.pdf --query "How do these papers differ?"
 # or
-python rag/app.py --pdf data/raw/paper-one.pdf data/raw/paper-two.pdf --query "How do these papers differ?"
+python -m rag.app --pdf data/raw/paper-one.pdf data/raw/paper-two.pdf --query "How do these papers differ?"
 ```
 
 Ask a specific question:
 
 ```bash
-uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
 # or
-python rag/app.py --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
+python -m rag.app --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
 ```
 
 Use OpenAI for the final grounded answer:
 
 ```bash
-uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the main contributions?" --answer-mode openai
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --query "What are the main contributions?" --answer-mode openai
 # or
-python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the main contributions?" --answer-mode openai
+python -m rag.app --pdf data/raw/your-paper.pdf --query "What are the main contributions?" --answer-mode openai
 ```
 
 Optionally change the retrieval size:
 
 ```bash
-uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the limitations?" --top-k 5
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --query "What are the limitations?" --top-k 5
 # or
-python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the limitations?" --top-k 5
+python -m rag.app --pdf data/raw/your-paper.pdf --query "What are the limitations?" --top-k 5
 ```
 
 Run optional benchmark evaluation with a gold file:
 
 ```bash
-uv run python rag/app.py --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
 # or
-python rag/app.py --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
+python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
 ```
 
 ## Notes

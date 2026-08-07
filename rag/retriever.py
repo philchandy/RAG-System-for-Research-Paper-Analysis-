@@ -3,8 +3,8 @@ import re
 from langchain_core.documents import Document
 from rank_bm25 import BM25Okapi
 
-from resources import get_vector_store
-from reranker import cross_encoder_rerank
+from rag.resources import get_vector_store
+from rag.reranker import cross_encoder_rerank
 
 
 RRF_K = 60

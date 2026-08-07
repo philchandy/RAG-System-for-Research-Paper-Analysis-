@@ -1,4 +1,4 @@
-from resources import get_reranker
+from rag.resources import get_reranker
 
 
 def cross_encoder_rerank(query, documents, limit):

@@ -4,8 +4,8 @@ import os
 from dotenv import load_dotenv
 import openai as OpenAI
 
-from answer import ENV_PATH
-from router import Intent, RetrievalRoute, deterministic_route_query
+from rag.answer import ENV_PATH
+from rag.router import Intent, RetrievalRoute, deterministic_route_query
 
 
 PLANNER_MODEL = "gpt-4o-mini"

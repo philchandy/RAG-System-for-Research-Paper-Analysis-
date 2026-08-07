@@ -7,18 +7,18 @@ web layers should call these functions and handle presentation themselves.
 
 from pathlib import Path
 
-from ingestion import extract_text_from_pdf
-from chunking import chunk_text
-from indexing import build_vector_store_from_pdf, make_document_id
-from retrieval import answer_query as retrieve_answer_for_query, retrieve_summary_evidence, build_summary_dict
-from evaluation import (
+from rag.ingestion import extract_text_from_pdf
+from rag.chunking import chunk_text
+from rag.indexing import build_vector_store_from_pdf, make_document_id
+from rag.retrieval import answer_query as retrieve_answer_for_query, retrieve_summary_evidence, build_summary_dict
+from rag.evaluation import (
     load_gold_references,
     evaluate_summary_dict,
     load_followup_questions,
     evaluate_followup_questions,
 )
-from config import SUMMARY_QUERIES
-from resources import preload
+from rag.config import SUMMARY_QUERIES
+from rag.resources import preload
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent

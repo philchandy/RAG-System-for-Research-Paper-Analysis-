@@ -1,5 +1,5 @@
 import re
-from ingestion import split_into_sections
+from rag.ingestion import split_into_sections
 
 
 def split_long_unit(unit, chunk_size):

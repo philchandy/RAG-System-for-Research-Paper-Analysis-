@@ -10,7 +10,7 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from sentence_transformers import CrossEncoder
 
-from config import CHROMA_DIR, EMBEDDING_MODEL, RERANKER_MODEL
+from rag.config import CHROMA_DIR, EMBEDDING_MODEL, RERANKER_MODEL
 
 
 _EMBEDDINGS = None

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import torch
 
-from config import DEFAULT_GOLD_PATH
-from evaluation import summarize_followup_results
-from pipeline import (
+from rag.config import DEFAULT_GOLD_PATH
+from rag.evaluation import summarize_followup_results
+from rag.pipeline import (
     answer_question,
     evaluate_against_gold,
     evaluate_followups_against_gold,

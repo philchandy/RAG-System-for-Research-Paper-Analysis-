@@ -1,6 +1,6 @@
 import re
-from answer import MISSING_ANSWER
-from config import DEFAULT_GOLD_PATH
+from rag.answer import MISSING_ANSWER
+from rag.config import DEFAULT_GOLD_PATH
 
 def load_gold_references(gold_path=DEFAULT_GOLD_PATH):
     """

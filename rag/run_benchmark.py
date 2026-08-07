@@ -1,9 +1,9 @@
 import argparse
 
-from config import DATA_DIR, OUTPUTS_DIR
-from evaluation import summarize_followup_results
-from indexing import make_document_id
-from pipeline import evaluate_against_gold, evaluate_followups_against_gold, index_documents
+from rag.config import DATA_DIR, OUTPUTS_DIR
+from rag.evaluation import summarize_followup_results
+from rag.indexing import make_document_id
+from rag.pipeline import evaluate_against_gold, evaluate_followups_against_gold, index_documents
 
 
 BENCHMARK_PAIRS = [
