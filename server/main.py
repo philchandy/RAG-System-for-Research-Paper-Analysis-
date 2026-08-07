@@ -14,8 +14,16 @@ from pathlib import Path
 import anyio
 from fastapi import FastAPI, HTTPException, UploadFile
 
-from rag import delete_document, index_document, list_documents, preload
-from server.schemas import DeleteResponse, DocumentListResponse, UploadResponse
+from rag import answer_question, delete_document, index_document, list_documents, preload, summarize_document
+from server.schemas import (
+    DeleteResponse,
+    DocumentListResponse,
+    QueryRequest,
+    QueryResponse,
+    SummarizeRequest,
+    SummarizeResponse,
+    UploadResponse,
+)
 from server.settings import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, UPLOAD_DIR
 
 
@@ -94,6 +102,90 @@ async def remove_document(document_id: str) -> DeleteResponse:
     if result["removed_chunks"] == 0 and not result["file_deleted"]:
         raise HTTPException(status_code=404, detail=f"No indexed document with id '{document_id}'.")
     return DeleteResponse(**result)
+
+
+@app.post("/query", response_model=QueryResponse)
+async def query_documents(request: QueryRequest) -> QueryResponse:
+    """
+    Answers a question from evidence retrieved across the selected documents.
+    """
+    def run_query():
+        return answer_question(
+            request.question,
+            top_k=request.top_k,
+            document_ids=request.document_ids,
+            answer_mode=request.answer_mode,
+        )
+
+    try:
+        result = await anyio.to_thread.run_sync(run_query)
+    except RuntimeError as error:
+        # e.g. answer_mode=openai without OPENAI_API_KEY configured
+        raise HTTPException(status_code=503, detail=str(error))
+
+    return QueryResponse(
+        question=result["query"],
+        answer=result["answer"],
+        answer_mode=result["answer_mode"],
+        filtered_document_ids=result["filtered_document_ids"],
+        evidence=build_evidence_items(result),
+    )
+
+
+def build_evidence_items(result):
+    """
+    Zips the pipeline's parallel evidence lists into structured items.
+    """
+    return [
+        {
+            "chunk_id": chunk_id,
+            "document_id": document_id,
+            "source": source,
+            "section": section,
+            "text": text,
+        }
+        for chunk_id, document_id, source, section, text in zip(
+            result["chunk_ids"],
+            result["document_ids"],
+            result["sources"],
+            result["sections"],
+            result["evidence_snippets"],
+        )
+    ]
+
+
+@app.post("/summarize", response_model=SummarizeResponse)
+async def summarize(request: SummarizeRequest) -> SummarizeResponse:
+    """
+    Builds the five-part paper summary (problem, method, dataset, results,
+    limitations) with supporting evidence for the selected documents.
+    """
+    def run_summary():
+        return summarize_document(
+            document_ids=request.document_ids,
+            top_k=request.top_k,
+            answer_mode=request.answer_mode,
+        )
+
+    try:
+        summary_dict = await anyio.to_thread.run_sync(run_summary)
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+
+    summary = {
+        field: {
+            "question": result["query"],
+            "answer": result["answer"],
+            "evidence": build_evidence_items(result),
+        }
+        for field, result in summary_dict.items()
+    }
+
+    return SummarizeResponse(
+        answer_mode=request.answer_mode,
+        filtered_document_ids=request.document_ids or [],
+        summary=summary,
+    )
 
 
 @app.get("/health")

@@ -2,7 +2,9 @@
 Pydantic request/response models mirroring the rag pipeline dicts.
 """
 
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 class FirstChunk(BaseModel):
@@ -38,3 +40,44 @@ class DeleteResponse(BaseModel):
     removed_chunks: int
     file_deleted: bool
     source: str | None = None
+
+
+class QueryRequest(BaseModel):
+    question: str = Field(min_length=1)
+    document_ids: list[str] | None = None
+    top_k: int = Field(default=3, ge=1, le=20)
+    answer_mode: Literal["extractive", "openai"] = "extractive"
+
+
+class EvidenceItem(BaseModel):
+    chunk_id: str
+    document_id: str | None = None
+    source: str | None = None
+    section: str | None = None
+    text: str
+
+
+class QueryResponse(BaseModel):
+    question: str
+    answer: str
+    answer_mode: str
+    filtered_document_ids: list[str]
+    evidence: list[EvidenceItem]
+
+
+class SummarizeRequest(BaseModel):
+    document_ids: list[str] | None = None
+    top_k: int = Field(default=3, ge=1, le=20)
+    answer_mode: Literal["extractive", "openai"] = "extractive"
+
+
+class SummaryField(BaseModel):
+    question: str
+    answer: str
+    evidence: list[EvidenceItem]
+
+
+class SummarizeResponse(BaseModel):
+    answer_mode: str
+    filtered_document_ids: list[str]
+    summary: dict[str, SummaryField]
