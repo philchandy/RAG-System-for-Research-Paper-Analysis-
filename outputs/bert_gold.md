@@ -1,4 +1,4 @@
-# BERT paper gold references (MVP answer key)
+# BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
 
 ## problem
 - Prior pre-training approaches were either feature-based or used unidirectional language models for fine-tuning, which limited contextual representation power.
