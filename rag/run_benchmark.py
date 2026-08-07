@@ -1,14 +1,15 @@
 import argparse
-from pathlib import Path
 
+from config import DATA_DIR, OUTPUTS_DIR
+from evaluation import summarize_followup_results
 from indexing import make_document_id
-from pipeline import evaluate_against_gold, index_documents
+from pipeline import evaluate_against_gold, evaluate_followups_against_gold, index_documents
 
 
 BENCHMARK_PAIRS = [
-    ("data/raw/bert.pdf", "outputs/bert_gold.md"),
-    ("data/raw/optogenetic_rescue.pdf", "outputs/optogenetic_rescue_gold.md"),
-    ("data/raw/smart_microscopy.pdf", "outputs/smart_microscopy_gold.md"),
+    (DATA_DIR / "bert.pdf", OUTPUTS_DIR / "bert_gold.md"),
+    (DATA_DIR / "optogenetic_rescue.pdf", OUTPUTS_DIR / "optogenetic_rescue_gold.md"),
+    (DATA_DIR / "smart_microscopy.pdf", OUTPUTS_DIR / "smart_microscopy_gold.md"),
 ]
 
 
@@ -41,6 +42,34 @@ def print_paper_evaluation(pdf_path, evaluation):
         print(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
 
 
+def print_paper_followup_evaluation(pdf_path, results):
+    print(f"\n--- {pdf_path.name} follow-up questions ---")
+    if results is None:
+        print("No follow-up questions found. Skipping.")
+        return
+
+    for result in results:
+        expected = "answer" if result["answerable"] else "refusal"
+        status = "correct" if result["correct"] else "WRONG"
+        print(f"[{status}] ({expected}) {result['question']}")
+
+    totals = summarize_followup_results(results)
+    print(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
+    print(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
+
+
+def print_followup_summary(all_followup_results):
+    totals = summarize_followup_results(
+        [result for results in all_followup_results if results for result in results]
+    )
+
+    print("\n--- Follow-up Question Benchmark Summary ---")
+    print(f"Questions scored: {totals['total']}")
+    if totals["total"]:
+        print(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
+        print(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
+
+
 def print_summary(all_evaluations):
     total_fields = 0
     covered_fields = 0
@@ -70,9 +99,8 @@ def main():
     args = parse_args()
 
     all_evaluations = []
-    for pdf_name, gold_name in BENCHMARK_PAIRS:
-        pdf_path = Path(pdf_name)
-        gold_path = Path(gold_name)
+    all_followup_results = []
+    for pdf_path, gold_path in BENCHMARK_PAIRS:
         document_id = make_document_id(pdf_path)
         index_documents([pdf_path], document_id=document_id)
 
@@ -85,7 +113,17 @@ def main():
         print_paper_evaluation(pdf_path, evaluation)
         all_evaluations.append(evaluation)
 
+        followup_results = evaluate_followups_against_gold(
+            gold_path,
+            document_ids=[document_id],
+            answer_mode=args.answer_mode,
+            top_k=args.top_k,
+        )
+        print_paper_followup_evaluation(pdf_path, followup_results)
+        all_followup_results.append(followup_results)
+
     print_summary(all_evaluations)
+    print_followup_summary(all_followup_results)
 
 
 if __name__ == "__main__":

@@ -28,3 +28,25 @@
 - The current PyCLM implementation does not track or store individual single-cell identity/behavior over time, limiting analyses that require per-cell history, such as identifying persistently fast versus slow migrators or implementing integral feedback controllers.
 - PyCLM currently supports only a single light source per experiment; more complex multi-input, multi-output optogenetic control has not yet been implemented.
 - The mechanistic basis for why fast RTK activity waves reverse tissue migration direction in some cellular contexts (MDCK) but instead produce only symmetric, non-directional oscillatory movement in others (MCF10A) remains unresolved.
+
+## follow_up_questions
+
+Answerable from the paper:
+- Q: What software does PyCLM use for real-time cell segmentation?
+  A: Cellpose.
+- Q: How many independently threaded module classes does PyCLM's master scheduler coordinate?
+  A: Five (microscope manager, microscope outbox, segmentation module, pattern module, pattern manager).
+- Q: How many MCF10A cells were used in the single-cell feedback control experiment, and what marker did they express?
+  A: 1,127 cells expressing a TagRFP-H2B nuclear marker.
+- Q: How much faster was tissue migration under fast (60 µm/h) versus slow (15 µm/h) EGFR waves in MDCK cells?
+  A: 6.06 ± 1.95 µm/h vs 3.40 ± 1.82 µm/h (p = 0.046, paired t test).
+- Q: What file format is used to configure PyCLM experiments?
+  A: TOML files, together with a position list.
+
+Not answered in the paper:
+- Q: Has PyCLM been tested on human tumor organoids?
+  A: Not mentioned — the demonstrated systems are MCF10A and MDCK cell lines and Drosophila embryos.
+- Q: Is PyCLM open source, and under what license is it released?
+  A: Not covered in the paper's described content.
+- Q: Does PyCLM support multi-photon excitation microscopy?
+  A: Not discussed in the paper.

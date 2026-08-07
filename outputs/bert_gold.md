@@ -23,3 +23,25 @@
 - Pre-training is computationally expensive: large TPU resources are used, with pre-training runs reported as taking about 4 days.
 - Longer sequence training is costly because self-attention scales quadratically with sequence length.
 - Fine-tuning BERT_LARGE is reported as sometimes unstable on small datasets, requiring random restarts.
+
+## follow_up_questions
+
+Answerable from the paper:
+- Q: How many parameters does BERT_LARGE have?
+  A: 340M parameters (L=24, H=1024, A=16).
+- Q: Besides masked language modeling, what other pre-training objective does BERT use?
+  A: Next sentence prediction (NSP), which pre-trains relationships between sentence pairs.
+- Q: What F1 score does BERT report on SQuAD v1.1?
+  A: 93.2 F1.
+- Q: What two corpora were used for pre-training?
+  A: BooksCorpus (about 800M words) and English Wikipedia (about 2,500M words).
+- Q: Why can fine-tuning BERT_LARGE be unstable?
+  A: On small datasets it is sometimes unstable, requiring random restarts.
+
+Not answered in the paper:
+- Q: What is the carbon footprint or energy cost of pre-training BERT?
+  A: Not reported in the paper.
+- Q: How does BERT's performance compare to GPT-4 on GLUE?
+  A: Not applicable — GPT-4 postdates this paper and is never discussed.
+- Q: Under what license is the BERT codebase released?
+  A: Not covered in the paper text.

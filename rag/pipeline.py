@@ -11,7 +11,12 @@ from ingestion import extract_text_from_pdf
 from chunking import chunk_text
 from indexing import build_vector_store_from_pdf, make_document_id
 from retrieval import answer_query as retrieve_answer_for_query, retrieve_summary_evidence, build_summary_dict
-from evaluation import load_gold_references, evaluate_summary_dict
+from evaluation import (
+    load_gold_references,
+    evaluate_summary_dict,
+    load_followup_questions,
+    evaluate_followup_questions,
+)
 from config import SUMMARY_QUERIES
 
 
@@ -99,3 +104,19 @@ def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive"
 
     summary_dict = summarize_document(document_ids=document_ids, top_k=top_k, answer_mode=answer_mode)
     return evaluate_summary_dict(summary_dict, gold_references)
+
+
+def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3):
+    """
+    Runs the optional follow-up question benchmark. Returns a list of
+    per-question results, or None if the gold file has no follow-up questions.
+    """
+    gold_path = resolve_project_path(gold_path)
+    followup_entries = load_followup_questions(gold_path)
+    if not followup_entries:
+        return None
+
+    def answer_fn(question):
+        return answer_question(question, top_k=top_k, document_ids=document_ids, answer_mode=answer_mode)["answer"]
+
+    return evaluate_followup_questions(followup_entries, answer_fn)

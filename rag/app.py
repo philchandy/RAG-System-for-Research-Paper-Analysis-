@@ -11,7 +11,14 @@ from pathlib import Path
 import torch
 
 from config import DEFAULT_GOLD_PATH
-from pipeline import answer_question, evaluate_against_gold, index_documents, summarize_document
+from evaluation import summarize_followup_results
+from pipeline import (
+    answer_question,
+    evaluate_against_gold,
+    evaluate_followups_against_gold,
+    index_documents,
+    summarize_document,
+)
 
 
 def parse_args():
@@ -153,6 +160,27 @@ def print_evaluation(evaluation, gold_path):
         print("Matched keywords:", metrics["matched_keywords"])
 
 
+def print_followup_evaluation(results):
+    print("\n--- Optional Follow-up Question Benchmark ---")
+
+    if results is None:
+        print("No follow-up questions found in gold file. Skipping.")
+        return
+
+    for result in results:
+        print(f"\nQ: {result['question']}")
+        print("Expected:", "answer" if result["answerable"] else "refusal (not in document)")
+        print("Generated:", result["generated_answer"])
+        print("Correct:", result["correct"])
+        print("Hallucination:", result["hallucination"])
+        if result["answerable"]:
+            print("Matched keywords:", result["matched_keywords"])
+
+    totals = summarize_followup_results(results)
+    print(f"\nFollow-up accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
+    print(f"Follow-up hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
+
+
 def main():
     args = parse_args()
 
@@ -192,6 +220,13 @@ def main():
             answer_mode=args.answer_mode,
         )
         print_evaluation(evaluation, args.gold_file)
+
+        followup_results = evaluate_followups_against_gold(
+            args.gold_file,
+            document_ids=document_ids,
+            answer_mode=args.answer_mode,
+        )
+        print_followup_evaluation(followup_results)
 
 
 if __name__ == "__main__":
