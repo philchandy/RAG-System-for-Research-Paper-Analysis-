@@ -14,8 +14,8 @@ from pathlib import Path
 import anyio
 from fastapi import FastAPI, HTTPException, UploadFile
 
-from rag import index_document, list_documents, preload
-from server.schemas import DocumentListResponse, UploadResponse
+from rag import delete_document, index_document, list_documents, preload
+from server.schemas import DeleteResponse, DocumentListResponse, UploadResponse
 from server.settings import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, UPLOAD_DIR
 
 
@@ -83,6 +83,17 @@ async def get_documents() -> DocumentListResponse:
     """
     documents = await anyio.to_thread.run_sync(list_documents)
     return DocumentListResponse(documents=documents)
+
+
+@app.delete("/documents/{document_id}", response_model=DeleteResponse)
+async def remove_document(document_id: str) -> DeleteResponse:
+    """
+    Deletes all indexed chunks for a document id and its uploaded PDF file.
+    """
+    result = await anyio.to_thread.run_sync(delete_document, document_id)
+    if result["removed_chunks"] == 0 and not result["file_deleted"]:
+        raise HTTPException(status_code=404, detail=f"No indexed document with id '{document_id}'.")
+    return DeleteResponse(**result)
 
 
 @app.get("/health")

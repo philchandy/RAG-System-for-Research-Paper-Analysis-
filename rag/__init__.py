@@ -8,6 +8,7 @@ Public API for servers and scripts:
 
 from rag.pipeline import (
     answer_question,
+    delete_document,
     evaluate_against_gold,
     evaluate_followups_against_gold,
     index_document,

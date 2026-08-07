@@ -31,3 +31,10 @@ class DocumentInfo(BaseModel):
 
 class DocumentListResponse(BaseModel):
     documents: list[DocumentInfo]
+
+
+class DeleteResponse(BaseModel):
+    document_id: str
+    removed_chunks: int
+    file_deleted: bool
+    source: str | None = None

@@ -89,6 +89,46 @@ def list_documents():
     return sorted(documents.values(), key=lambda entry: entry["document_id"])
 
 
+def delete_document(document_id, pdf_dir=None):
+    """
+    Removes all indexed chunks for a document and deletes its source PDF.
+
+    Returns a dict with the number of chunks removed (0 if the document
+    was not indexed) and whether a PDF file was deleted.
+    """
+    from rag.config import DATA_DIR
+    from rag.indexing import remove_existing_document
+    from rag.resources import get_vector_store
+
+    vector_store = get_vector_store()
+    existing = vector_store.get(where={"document_id": document_id}, include=["metadatas"])
+    removed_count = len(existing.get("ids", []))
+
+    # Resolve the source filename from stored metadata before deleting chunks.
+    source = None
+    for metadata in existing.get("metadatas", []):
+        if metadata.get("source"):
+            source = metadata["source"]
+            break
+
+    if removed_count:
+        remove_existing_document(vector_store, document_id)
+
+    file_deleted = False
+    if source:
+        pdf_path = Path(pdf_dir or DATA_DIR) / source
+        if pdf_path.is_file():
+            pdf_path.unlink()
+            file_deleted = True
+
+    return {
+        "document_id": document_id,
+        "removed_chunks": removed_count,
+        "file_deleted": file_deleted,
+        "source": source,
+    }
+
+
 def answer_question(query, top_k=3, document_ids=None, answer_mode="extractive"):
     """
     Answers a question from evidence retrieved across the selected documents.
