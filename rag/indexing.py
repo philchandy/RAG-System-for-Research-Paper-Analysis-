@@ -69,6 +69,5 @@ def build_vector_store_from_pdf(pdf_path, document_id=None):
     )
     remove_existing_document(vector_store, document_id)
     vector_store.add_documents(documents)
-    
-    print(f"Indexed document '{document_id}' in shared vector store: {vector_store}")
+
     return document_id
