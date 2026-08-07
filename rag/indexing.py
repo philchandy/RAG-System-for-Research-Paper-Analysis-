@@ -2,13 +2,11 @@ from ingestion import extract_text_from_pdf
 from chunking import chunk_text
 
 from langchain_core.documents import Document
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 
 from pathlib import Path
 import re
 
-from config import CHROMA_DIR, EMBEDDING_MODEL
+from resources import get_vector_store
 
 
 def make_document_id(pdf_path):
@@ -56,17 +54,8 @@ def build_vector_store_from_pdf(pdf_path, document_id=None):
         )
         for index, chunk in enumerate(chunks, start=1)
     ]
-    
-    # Initialize embeddings
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    
-    # Create or update shared Chroma vector store
-    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
-    vector_store = Chroma(
-        persist_directory=CHROMA_DIR,
-        embedding_function=embeddings,
-    )
+    vector_store = get_vector_store()
     remove_existing_document(vector_store, document_id)
     vector_store.add_documents(documents)
 

@@ -1,23 +1,20 @@
 import re
 
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
 from rank_bm25 import BM25Okapi
 
-from config import CHROMA_DIR, EMBEDDING_MODEL
+from resources import get_vector_store
 from reranker import cross_encoder_rerank
 
 
-CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 RRF_K = 60
 
 
 def make_vector_store():
-    return Chroma(
-        persist_directory=CHROMA_DIR,
-        embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL),
-    )
+    """
+    Returns the shared Chroma vector store singleton.
+    """
+    return get_vector_store()
 
 
 def rerank_search_results(search_result_sets, limit):

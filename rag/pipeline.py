@@ -18,6 +18,7 @@ from evaluation import (
     evaluate_followup_questions,
 )
 from config import SUMMARY_QUERIES
+from resources import preload
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent

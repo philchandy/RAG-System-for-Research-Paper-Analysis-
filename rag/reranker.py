@@ -1,16 +1,4 @@
-from sentence_transformers import CrossEncoder
-
-from config import RERANKER_MODEL
-
-
-_RERANKER = None
-
-
-def get_reranker():
-    global _RERANKER
-    if _RERANKER is None:
-        _RERANKER = CrossEncoder(RERANKER_MODEL)
-    return _RERANKER
+from resources import get_reranker
 
 
 def cross_encoder_rerank(query, documents, limit):
