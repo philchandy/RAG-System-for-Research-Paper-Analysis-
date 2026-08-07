@@ -4,7 +4,15 @@ Command-line MVP for indexing a research PDF, retrieving relevant chunks, and an
 
 ## Setup
 
-From the root folder:
+From the root folder, using **uv**:
+
+```bash
+uv sync
+```
+
+This creates `.venv` and installs everything pinned in `uv.lock`.
+
+Or using plain **venv + pip**:
 
 ```powershell
 python -m venv .venv
@@ -20,34 +28,42 @@ OPENAI_API_KEY=your_api_key_here
 
 ## Run the MVP
 
-Run from the root folder:
+Run from the root folder.
+
+With uv:
+
+```bash
+uv run python rag/app.py --pdf data/raw/your-paper.pdf
+```
+
+Or with a manually activated venv:
 
 ```powershell
-.\.venv\Scripts\python.exe .\mvp\mvp_demo.py --pdf .\data\raw\your-paper.pdf
+.\.venv\Scripts\python.exe .\rag\app.py --pdf .\data\raw\your-paper.pdf
 ```
 
 Ask a specific question:
 
-```powershell
-.\.venv\Scripts\python.exe .\mvp\mvp_demo.py --pdf .\data\raw\your-paper.pdf --query "What methods does this paper use?"
+```bash
+uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
 ```
 
 Use OpenAI for the final grounded answer:
 
-```powershell
-.\.venv\Scripts\python.exe .\mvp\mvp_demo.py --pdf .\data\raw\your-paper.pdf --query "What are the main contributions?" --answer-mode openai
+```bash
+uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the main contributions?" --answer-mode openai
 ```
 
 Optionally change the retrieval size:
 
-```powershell
-.\.venv\Scripts\python.exe .\mvp\mvp_demo.py --pdf .\data\raw\your-paper.pdf --query "What are the limitations?" --top-k 5
+```bash
+uv run python rag/app.py --pdf data/raw/your-paper.pdf --query "What are the limitations?" --top-k 5
 ```
 
 Run optional benchmark evaluation with a gold file:
 
-```powershell
-.\.venv\Scripts\python.exe .\mvp\mvp_demo.py --pdf .\data\raw\your-paper.pdf --evaluate --gold-file .\outputs\bert_gold.md
+```bash
+uv run python rag/app.py --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
 ```
 
 ## Notes

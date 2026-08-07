@@ -1,0 +1,16 @@
+[project]
+name = "rag-paper-analysis"
+version = "0.1.0"
+description = "RAG system for indexing research papers and answering questions with grounded evidence."
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf",
+    "torch",
+    "langchain-core",
+    "langchain-chroma",
+    "langchain-huggingface",
+    "sentence-transformers",
+    "rank-bm25",
+    "openai",
+    "python-dotenv",
+]
