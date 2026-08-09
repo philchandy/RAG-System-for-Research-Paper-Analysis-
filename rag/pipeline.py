@@ -16,7 +16,10 @@ from rag.evaluation import (
     evaluate_summary_dict,
     load_followup_questions,
     evaluate_followup_questions,
+    judge_followup_answer,
+    judge_summary_field,
 )
+from rag.answer import call_openai
 from rag.config import SUMMARY_QUERIES
 from rag.resources import preload
 
@@ -155,7 +158,7 @@ def summarize_document(document_ids=None, top_k=3, answer_mode="extractive"):
     return build_summary_dict(summary_evidence, answer_mode=answer_mode)
 
 
-def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3):
+def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3, judge_mode="auto"):
     """
     Runs the optional gold benchmark. Returns metrics per summary field,
     or None if the gold file has no references.
@@ -166,10 +169,17 @@ def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive"
         return None
 
     summary_dict = summarize_document(document_ids=document_ids, top_k=top_k, answer_mode=answer_mode)
-    return evaluate_summary_dict(summary_dict, gold_references)
+
+    use_llm_judge = judge_mode == "llm" or (judge_mode == "auto" and answer_mode == "openai")
+    judge_fn = None
+    if use_llm_judge:
+        def judge_fn(field_name, generated_field, gold_bullets):
+            return judge_summary_field(field_name, generated_field, gold_bullets, call_openai)
+
+    return evaluate_summary_dict(summary_dict, gold_references, judge_fn=judge_fn)
 
 
-def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3):
+def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3, judge_mode="auto"):
     """
     Runs the optional follow-up question benchmark. Returns a list of
     per-question results, or None if the gold file has no follow-up questions.
@@ -182,4 +192,10 @@ def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="e
     def answer_fn(question):
         return answer_question(question, top_k=top_k, document_ids=document_ids, answer_mode=answer_mode)["answer"]
 
-    return evaluate_followup_questions(followup_entries, answer_fn)
+    use_llm_judge = judge_mode == "llm" or (judge_mode == "auto" and answer_mode == "openai")
+    judge_fn = None
+    if use_llm_judge:
+        def judge_fn(entry, generated_answer):
+            return judge_followup_answer(entry, generated_answer, call_openai)
+
+    return evaluate_followup_questions(followup_entries, answer_fn, judge_fn=judge_fn)

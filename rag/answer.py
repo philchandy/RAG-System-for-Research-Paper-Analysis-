@@ -7,19 +7,22 @@ import openai as OpenAI
 MISSING_ANSWER = "I cannot find that in the uploaded document."
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
-def call_openai(prompt, model="gpt-4o-mini"):
+DEFAULT_SYSTEM_MESSAGE = "You answer only from provided evidence and cite chunk IDs."
+
+
+def call_openai(prompt, model="gpt-4o-mini", system_message=DEFAULT_SYSTEM_MESSAGE):
 
     load_dotenv(dotenv_path=ENV_PATH)
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("OPENAI_API_KEY is not set. Add it to final_proj/.env or your environment.")
-    
+
     client = OpenAI.OpenAI()
     res = client.chat.completions.create(
         model=model,
         messages=[
             {
                 "role": "system",
-                "content": "You answer only from provided evidence and cite chunk IDs."
+                "content": system_message
             },
             {
                 "role": "user",

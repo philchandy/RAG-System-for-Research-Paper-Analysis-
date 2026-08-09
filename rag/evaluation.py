@@ -66,13 +66,91 @@ def score_field_against_gold(field_name, generated_field, gold_references):
         "matched_keywords": sorted(gold_keywords & generated_keywords),
     }
 
-def evaluate_summary_dict(summary_dict, gold_references):
+def build_summary_field_judge_prompt(field_name, generated_field, gold_bullets):
+    """
+    Builds a grading prompt asking an LLM judge to compare a generated
+    summary field against its gold reference bullets.
+    """
+    gold_text = "\n".join(f"- {bullet}" for bullet in gold_bullets)
+    answer_text = generated_field.get("answer", "")
+    evidence_text = " ".join(generated_field.get("evidence_snippets", []))
+    generated_text = answer_text if not evidence_text else f"{answer_text}\n\nEvidence: {evidence_text}"
+
+    return "\n".join([
+        "You are grading a RAG system's generated paper-summary field against gold "
+        "reference bullet points written by a human from the paper.",
+        "",
+        f"Field: {field_name}",
+        "",
+        f"Gold reference bullets:\n{gold_text}",
+        "",
+        f"Generated field content:\n{generated_text}",
+        "",
+        "Grade the generated content:",
+        "- COVERAGE: hit if it captures the core claims from the gold bullets (wording "
+        "can differ, it doesn't need to be exhaustive), miss if it fails to reflect the "
+        "gold bullets' content or declines to answer.",
+        "- HALLUCINATION: yes if the generated content states something that contradicts "
+        "the gold reference or is a fabricated/incorrect claim for this field; no "
+        "otherwise (an honest refusal is never hallucination).",
+        "",
+        "Respond in exactly this format:",
+        "COVERAGE: hit or miss",
+        "HALLUCINATION: yes or no",
+        "REASON: one short sentence",
+    ])
+
+
+def parse_summary_field_judge_response(response_text):
+    """
+    Parses the judge's COVERAGE/HALLUCINATION/REASON response into a
+    (coverage_hit, hallucination, reason) tuple, with a conservative
+    fallback ("miss", not hallucinated) if the format doesn't match.
+    """
+    coverage_match = re.search(r"COVERAGE:\s*(hit|miss)", response_text, re.IGNORECASE)
+    hallucination_match = re.search(r"HALLUCINATION:\s*(yes|no)", response_text, re.IGNORECASE)
+    reason_match = re.search(r"REASON:\s*(.+)", response_text, re.IGNORECASE)
+
+    coverage_hit = bool(coverage_match) and coverage_match.group(1).lower() == "hit"
+    hallucination = bool(hallucination_match) and hallucination_match.group(1).lower() == "yes"
+    reason = reason_match.group(1).strip() if reason_match else response_text.strip()
+
+    return coverage_hit, hallucination, reason
+
+
+def judge_summary_field(field_name, generated_field, gold_bullets, llm_call):
+    """
+    Scores one generated summary field using an LLM judge instead of
+    keyword overlap. llm_call(prompt) -> response text.
+    """
+    if not gold_bullets:
+        return {"coverage": "miss", "hallucination": "no", "matched_keywords": [], "reason": "No gold reference bullets for this field."}
+
+    prompt = build_summary_field_judge_prompt(field_name, generated_field, gold_bullets)
+    response_text = llm_call(prompt)
+    coverage_hit, hallucination, reason = parse_summary_field_judge_response(response_text)
+
+    return {
+        "coverage": "hit" if coverage_hit else "miss",
+        "hallucination": "yes" if hallucination else "no",
+        "matched_keywords": [],
+        "reason": reason,
+    }
+
+
+def evaluate_summary_dict(summary_dict, gold_references, judge_fn=None):
     """
     Scores each generated summary field against the matching gold field.
+    Scores with judge_fn(field_name, generated_field, gold_bullets) -> score
+    dict when provided, otherwise falls back to the keyword-overlap scorer.
     """
     evaluation = {}
     for field_name, generated_field in summary_dict.items():
-        evaluation[field_name] = score_field_against_gold(field_name, generated_field, gold_references)
+        if judge_fn:
+            gold_bullets = gold_references.get(field_name, [])
+            evaluation[field_name] = judge_fn(field_name, generated_field, gold_bullets)
+        else:
+            evaluation[field_name] = score_field_against_gold(field_name, generated_field, gold_references)
     return evaluation
 
 def load_followup_questions(gold_path):
@@ -153,15 +231,95 @@ def score_followup_question(entry, generated_answer):
         "matched_keywords": sorted(matched_keywords),
     }
 
-def evaluate_followup_questions(followup_entries, answer_fn):
+def build_followup_judge_prompt(entry, generated_answer):
+    """
+    Builds a grading prompt asking an LLM judge to compare a generated
+    follow-up answer against its gold reference (or refusal expectation).
+    """
+    if entry["answerable"]:
+        expectation = (
+            "This question IS answerable from the paper. The reference answer below "
+            "was written by a human from the paper's content."
+        )
+        reference_block = f"Reference answer:\n{entry['reference_answer']}"
+    else:
+        expectation = (
+            "This question is intentionally NOT answerable from the paper. A correct "
+            "response declines to answer (e.g. states the information isn't in the "
+            "document), even if it also adds true, relevant context."
+        )
+        reference_block = "Reference answer: N/A (question is unanswerable from the paper)."
+
+    return "\n".join([
+        "You are grading a RAG system's answer against a human-written reference for a benchmark.",
+        expectation,
+        "",
+        f"Question:\n{entry['question']}",
+        "",
+        reference_block,
+        "",
+        f"Generated answer:\n{generated_answer}",
+        "",
+        "Grade the generated answer:",
+        "- CORRECT: for answerable questions, it conveys the same core facts as the "
+        "reference (wording, units, or extra detail can differ). For unanswerable "
+        "questions, it declines to answer instead of guessing.",
+        "- HALLUCINATION: the generated answer states a specific fact that is wrong or "
+        "unsupported (for unanswerable questions, hallucination means it fabricated an "
+        "answer instead of declining).",
+        "",
+        "Respond in exactly this format:",
+        "VERDICT: correct or incorrect",
+        "HALLUCINATION: yes or no",
+        "REASON: one short sentence",
+    ])
+
+
+def parse_followup_judge_response(response_text):
+    """
+    Parses the judge's VERDICT/HALLUCINATION/REASON response into a (correct,
+    hallucination, reason) tuple.
+    """
+    verdict_match = re.search(r"VERDICT:\s*(correct|incorrect)", response_text, re.IGNORECASE)
+    hallucination_match = re.search(r"HALLUCINATION:\s*(yes|no)", response_text, re.IGNORECASE)
+    reason_match = re.search(r"REASON:\s*(.+)", response_text, re.IGNORECASE)
+
+    correct = bool(verdict_match) and verdict_match.group(1).lower() == "correct"
+    hallucination = bool(hallucination_match) and hallucination_match.group(1).lower() == "yes"
+    reason = reason_match.group(1).strip() if reason_match else response_text.strip()
+
+    return correct, hallucination, reason
+
+
+def judge_followup_answer(entry, generated_answer, llm_call):
+    """
+    Scores one follow-up question's generated answer using an LLM judge
+    instead of keyword overlap. llm_call(prompt) -> response text.
+    """
+    prompt = build_followup_judge_prompt(entry, generated_answer)
+    response_text = llm_call(prompt)
+    correct, hallucination, reason = parse_followup_judge_response(response_text)
+
+    return {
+        "expected": "answer" if entry["answerable"] else "refusal",
+        "correct": correct,
+        "hallucination": "yes" if hallucination else "no",
+        "matched_keywords": [],
+        "reason": reason,
+    }
+
+
+def evaluate_followup_questions(followup_entries, answer_fn, judge_fn=None):
     """
     Answers each follow-up question with answer_fn(question) -> answer text
-    and scores it against its reference. Returns per-question results.
+    and scores it against its reference. Scores with judge_fn(entry,
+    generated_answer) -> score dict when provided, otherwise falls back to
+    the keyword-overlap scorer. Returns per-question results.
     """
     results = []
     for entry in followup_entries:
         generated_answer = answer_fn(entry["question"])
-        score = score_followup_question(entry, generated_answer)
+        score = judge_fn(entry, generated_answer) if judge_fn else score_followup_question(entry, generated_answer)
         results.append({
             "question": entry["question"],
             "reference_answer": entry["reference_answer"],

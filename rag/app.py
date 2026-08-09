@@ -71,6 +71,17 @@ def parse_args():
         default=DEFAULT_GOLD_PATH,
         help="Markdown file containing manually written gold references for benchmark evaluation.",
     )
+    parser.add_argument(
+        "--judge",
+        dest="judge_mode",
+        choices=["auto", "keyword", "llm"],
+        default="auto",
+        help=(
+            "How to score follow-up answers: 'keyword' uses lightweight keyword "
+            "overlap, 'llm' uses an OpenAI judge call, 'auto' (default) uses the "
+            "LLM judge when --answer-mode is openai and keyword overlap otherwise."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -157,7 +168,10 @@ def print_evaluation(evaluation, gold_path):
         print(f"\n{field.upper()}:")
         print("Coverage:", metrics["coverage"])
         print("Hallucination:", metrics["hallucination"])
-        print("Matched keywords:", metrics["matched_keywords"])
+        if metrics["matched_keywords"]:
+            print("Matched keywords:", metrics["matched_keywords"])
+        if metrics.get("reason"):
+            print("Judge reason:", metrics["reason"])
 
 
 def print_followup_evaluation(results):
@@ -173,8 +187,10 @@ def print_followup_evaluation(results):
         print("Generated:", result["generated_answer"])
         print("Correct:", result["correct"])
         print("Hallucination:", result["hallucination"])
-        if result["answerable"]:
+        if result["answerable"] and result["matched_keywords"]:
             print("Matched keywords:", result["matched_keywords"])
+        if result.get("reason"):
+            print("Judge reason:", result["reason"])
 
     totals = summarize_followup_results(results)
     print(f"\nFollow-up accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
@@ -218,6 +234,7 @@ def main():
             args.gold_file,
             document_ids=document_ids,
             answer_mode=args.answer_mode,
+            judge_mode=args.judge_mode,
         )
         print_evaluation(evaluation, args.gold_file)
 
@@ -225,6 +242,7 @@ def main():
             args.gold_file,
             document_ids=document_ids,
             answer_mode=args.answer_mode,
+            judge_mode=args.judge_mode,
         )
         print_followup_evaluation(followup_results)
 

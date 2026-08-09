@@ -47,6 +47,17 @@ def parse_args():
         default=3,
         help="Number of evidence chunks to retrieve per summary field.",
     )
+    parser.add_argument(
+        "--judge",
+        dest="judge_mode",
+        choices=["auto", "keyword", "llm"],
+        default="auto",
+        help=(
+            "How to score follow-up answers: 'keyword' uses lightweight keyword "
+            "overlap, 'llm' uses an OpenAI judge call, 'auto' (default) uses the "
+            "LLM judge when --answer-mode is openai and keyword overlap otherwise."
+        ),
+    )
     return parser.parse_args()
 
 def print_paper_evaluation(pdf_path, evaluation):
@@ -57,7 +68,10 @@ def print_paper_evaluation(pdf_path, evaluation):
 
     for field, metrics in evaluation.items():
         logger.info(f"{field}: coverage={metrics['coverage']}, hallucination={metrics['hallucination']}")
-        logger.info(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
+        if metrics["matched_keywords"]:
+            logger.info(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
+        if metrics.get("reason"):
+            logger.info(f"  judge reason: {metrics['reason']}")
 
 
 def print_paper_followup_evaluation(pdf_path, results):
@@ -73,6 +87,8 @@ def print_paper_followup_evaluation(pdf_path, results):
         logger.info(f"  generated: {result['generated_answer']}")
         if result["answerable"]:
             logger.info(f"  reference: {result['reference_answer']}")
+        if result.get("reason"):
+            logger.info(f"  judge reason: {result['reason']}")
 
     totals = summarize_followup_results(results)
     logger.info(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
@@ -131,6 +147,7 @@ def main():
             document_ids=[document_id],
             answer_mode=args.answer_mode,
             top_k=args.top_k,
+            judge_mode=args.judge_mode,
         )
         print_paper_evaluation(pdf_path, evaluation)
         all_evaluations.append(evaluation)
@@ -140,6 +157,7 @@ def main():
             document_ids=[document_id],
             answer_mode=args.answer_mode,
             top_k=args.top_k,
+            judge_mode=args.judge_mode,
         )
         print_paper_followup_evaluation(pdf_path, followup_results)
         all_followup_results.append(followup_results)
