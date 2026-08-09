@@ -186,6 +186,12 @@ def retrieve(route, question, k=5, document_id=None):
 
     if not results:
         results = unfiltered_results
+    elif route.section_filter and len(results) < k:
+        seen_chunk_ids = {doc.metadata.get("chunk_id") for doc in results}
+        results = results + [
+            doc for doc in unfiltered_results
+            if doc.metadata.get("chunk_id") not in seen_chunk_ids
+        ]
 
     if route.use_reranker:
         results = cross_encoder_rerank(question, results, limit=candidate_limit)

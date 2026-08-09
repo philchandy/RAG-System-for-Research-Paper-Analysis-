@@ -8,7 +8,24 @@ NAMED_SECTION_HEADERS = {
     "related work",
     "experiments",
     "conclusion",
+    "results",
+    "discussion",
+    "summary",
+    "methods",
+    "method",
+    "star methods",
+    "materials and methods",
+    "background",
+    "limitations",
+    "future work",
+    "acknowledgments",
+    "acknowledgements",
+    "key resources table",
+    "experimental model and subject details",
+    "quantification and statistical analysis",
+    "supplemental information",
 }
+DECORATIVE_HEADER_CHARS = re.compile(r"[^A-Za-z0-9 ]+")
 
 def normalize_pdf_text(text):
     """
@@ -43,6 +60,15 @@ def trim_back_matter(text):
     return text[:cut_index].strip()
 
 
+def normalize_header_text(text):
+    """
+    Strips decorative glyphs so headers can be matched against the plain-text whitelist
+    regardless of styling.
+    """
+    normalized = DECORATIVE_HEADER_CHARS.sub(" ", text)
+    return re.sub(r"\s+", " ", normalized).strip().lower()
+
+
 def is_section_header(line):
     """
     Heuristic detector for major paper section headers.
@@ -53,8 +79,7 @@ def is_section_header(line):
     if len(stripped) > 80:
         return False
 
-    lowercase = stripped.lower()
-    if lowercase in NAMED_SECTION_HEADERS:
+    if stripped[0].isupper() and normalize_header_text(stripped) in NAMED_SECTION_HEADERS:
         return True
 
     if not NUMBERED_SECTION_PATTERN.match(stripped):
