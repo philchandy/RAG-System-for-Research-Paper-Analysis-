@@ -164,16 +164,17 @@ def retrieve_metadata_route(vector_store, route, document_id=None):
 
 def retrieve(route, question, k=5, document_id=None):
     vector_store = make_vector_store()
-    result_limit = max(k, 12) if route.use_vector_search and len(route.queries) > 1 else k
+    # Wide candidate pool for fusion and reranking; final result is trimmed to k.
+    candidate_limit = max(k, 12) if route.use_vector_search and len(route.queries) > 1 else k
 
     if not route.use_vector_search:
-        return retrieve_metadata_route(vector_store, route, document_id=document_id)[:result_limit]
+        return retrieve_metadata_route(vector_store, route, document_id=document_id)[:k]
 
     search_filter = make_document_filter(document_id)
     results = retrieve_multi_query(
         vector_store,
         route.queries,
-        k=result_limit,
+        k=candidate_limit,
         search_filter=search_filter,
         document_ids=document_id,
     )
@@ -187,6 +188,6 @@ def retrieve(route, question, k=5, document_id=None):
         results = unfiltered_results
 
     if route.use_reranker:
-        results = cross_encoder_rerank(question, results, limit=result_limit)
+        results = cross_encoder_rerank(question, results, limit=candidate_limit)
 
-    return results[:result_limit]
+    return results[:k]

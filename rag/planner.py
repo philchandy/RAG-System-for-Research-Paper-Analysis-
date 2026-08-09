@@ -77,7 +77,7 @@ def normalize_metadata_filter(metadata_filter):
     return normalized_values or None
 
 
-def route_from_plan(plan, fallback_route):
+def route_from_plan(plan, fallback_route, question=None):
     if not isinstance(plan, dict):
         return fallback_route
 
@@ -101,6 +101,9 @@ def route_from_plan(plan, fallback_route):
 
     if not queries:
         queries = fallback_route.queries
+    if not queries and question:
+        # Never run vector search with zero queries (e.g. author-intent fallback).
+        queries = [question]
 
     return RetrievalRoute(
         intent=intent,
@@ -132,4 +135,4 @@ def plan_query(question, model=PLANNER_MODEL):
     except Exception:
         return fallback_route
 
-    return route_from_plan(plan, fallback_route)
+    return route_from_plan(plan, fallback_route, question=question)

@@ -43,12 +43,14 @@ SECTION_FILTER_TERMS = {
 def classify_intent(query):
     normalized_query = query.lower()
 
+    # Check limitations/future-work before author: "what future work do the
+    # authors suggest" mentions authors but is not an author question.
+    if any(term in normalized_query for term in ["limitation", "limitations", "challenge", "challenges", "fail", "failure", "weakness", "future", "future work", "future direction", "future directions"]):
+        return Intent.LIMITATIONS
     if any(term in normalized_query for term in ["author", "authors", "wrote", "written by", "title"]):
         return Intent.AUTHOR
     if any(term in normalized_query for term in ["compare", "comparison", "versus", "vs", "difference", "different"]):
         return Intent.COMPARE
-    if any(term in normalized_query for term in ["limitation", "limitations", "challenge", "challenges", "fail", "failure", "weakness", "future", "future work", "future direction", "future directions"]):
-        return Intent.LIMITATIONS
     if any(term in normalized_query for term in ["application", "applications", "use case", "use cases", "used for", "where is"]):
         return Intent.APPLICATIONS
     if any(term in normalized_query for term in ["method", "methods", "approach", "approaches", "framework", "architecture", "module", "modules"]):
@@ -71,9 +73,8 @@ def detect_section_filter(query):
 
 def build_queries(intent, question):
     query_terms = INTENT_QUERY_TERMS[intent]
-    if intent == Intent.UNKNOWN:
-        return [question] + query_terms[:4]
-    return query_terms[:5]
+    # Always search with the user's actual wording, not just generic intent terms.
+    return [question] + query_terms[:4]
 
 
 def deterministic_route_query(question):
