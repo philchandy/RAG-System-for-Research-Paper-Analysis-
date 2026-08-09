@@ -1,5 +1,5 @@
 import '../styles/components/SummaryResult.css'
-import EvidenceList from './EvidenceList'
+import GroundedAnswer from './GroundedAnswer'
 import { SUMMARY_FIELD_LABELS } from '../constants'
 
 function SummaryResult({ result, loading }) {
@@ -15,11 +15,7 @@ function SummaryResult({ result, loading }) {
             <span className="summary-label">{SUMMARY_FIELD_LABELS[field] || field.replaceAll('_', ' ')}</span>
           </summary>
           <div className="summary-body">
-            <p>{payload.answer}</p>
-            <details className="evidence-toggle">
-              <summary>Evidence ({payload.evidence.length})</summary>
-              <EvidenceList evidence={payload.evidence} />
-            </details>
+            <GroundedAnswer text={payload.answer} evidence={payload.evidence} />
           </div>
         </details>
       ))}

@@ -15,6 +15,13 @@
   padding: 10px 12px;
   border-radius: var(--radius-s);
   background: var(--paper-3);
+  scroll-margin: 24px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.evidence-card.flash {
+  background: var(--accent-tint);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .evidence-card p {
@@ -37,4 +44,9 @@
   color: var(--ink-faint);
   font-size: 11px;
   font-weight: 600;
+}
+
+.evidence-meta .chunk-id {
+  font-family: var(--mono);
+  color: var(--accent-strong);
 }

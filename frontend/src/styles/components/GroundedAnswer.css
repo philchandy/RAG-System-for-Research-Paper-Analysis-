@@ -1,0 +1,47 @@
+.answer-text {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.answer-text p {
+  margin: 0;
+}
+
+.answer-text ol,
+.answer-text ul {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.answer-text li {
+  line-height: 1.55;
+}
+
+/* Chunk citations: subdued inline chips that jump to their evidence card. */
+.citation {
+  display: inline;
+  min-height: 0;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 0.78em;
+  font-weight: 500;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s ease;
+  vertical-align: baseline;
+}
+
+.citation:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent-strong);
+  text-decoration: underline;
+}

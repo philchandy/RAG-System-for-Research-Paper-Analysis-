@@ -1,5 +1,5 @@
 import '../styles/components/AnswerResult.css'
-import EvidenceList from './EvidenceList'
+import GroundedAnswer from './GroundedAnswer'
 
 function AnswerResult({ result, loading }) {
   if (!result) {
@@ -7,13 +7,7 @@ function AnswerResult({ result, loading }) {
   }
 
   return (
-    <>
-      <p className="answer-text">{result.answer}</p>
-      <details className="evidence-toggle">
-        <summary>Evidence ({result.evidence.length})</summary>
-        <EvidenceList evidence={result.evidence} />
-      </details>
-    </>
+    <GroundedAnswer text={result.answer} evidence={result.evidence} />
   )
 }
 
