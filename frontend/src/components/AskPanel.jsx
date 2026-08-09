@@ -1,3 +1,5 @@
+import '../styles/components/AskPanel.css'
+
 function AskPanel({
   question,
   onQuestionChange,

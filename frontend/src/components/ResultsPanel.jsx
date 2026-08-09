@@ -1,3 +1,4 @@
+import '../styles/components/ResultsPanel.css'
 import AnswerResult from './AnswerResult'
 import SummaryResult from './SummaryResult'
 

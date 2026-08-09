@@ -1,3 +1,5 @@
+import '../styles/components/LibraryPanel.css'
+
 function LibraryPanel({
   documents,
   selectedDocumentIds,

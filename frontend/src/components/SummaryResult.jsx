@@ -1,3 +1,4 @@
+import '../styles/components/SummaryResult.css'
 import EvidenceList from './EvidenceList'
 import { SUMMARY_FIELD_LABELS } from '../constants'
 

@@ -1,3 +1,5 @@
+import '../styles/components/Header.css'
+
 function Header({ backendStatus }) {
   return (
     <header className="app-header">

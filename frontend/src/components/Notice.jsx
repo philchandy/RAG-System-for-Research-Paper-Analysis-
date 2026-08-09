@@ -1,3 +1,5 @@
+import '../styles/components/Notice.css'
+
 function Notice({ error, message }) {
   if (!error && !message) return null
 

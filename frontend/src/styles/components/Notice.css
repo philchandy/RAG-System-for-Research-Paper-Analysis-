@@ -1,0 +1,17 @@
+.notice {
+  margin: 0 4px 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-s);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.notice.error {
+  background: var(--bad-tint);
+  color: #7a3c33;
+}
+
+.notice.success {
+  background: var(--good-tint);
+  color: #3f5a42;
+}

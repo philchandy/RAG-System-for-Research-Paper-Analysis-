@@ -1,3 +1,4 @@
+import '../styles/components/AnswerResult.css'
 import EvidenceList from './EvidenceList'
 
 function AnswerResult({ result, loading }) {

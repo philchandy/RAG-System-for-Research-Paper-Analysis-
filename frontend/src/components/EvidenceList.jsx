@@ -1,3 +1,5 @@
+import '../styles/components/EvidenceList.css'
+
 function EvidenceList({ evidence = [] }) {
   if (!evidence.length) {
     return <p className="muted">No evidence chunks returned.</p>

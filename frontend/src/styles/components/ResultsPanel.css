@@ -1,0 +1,10 @@
+.results-column {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.results-column .card {
+  width: 100%;
+  max-width: 640px;
+}
