@@ -1,6 +1,7 @@
 import argparse
+import logging
 
-from rag.config import DATA_DIR, OUTPUTS_DIR
+from rag.config import BASE_DIR, DATA_DIR, OUTPUTS_DIR
 from rag.evaluation import summarize_followup_results
 from rag.indexing import make_document_id
 from rag.pipeline import evaluate_against_gold, evaluate_followups_against_gold, index_documents
@@ -11,6 +12,23 @@ BENCHMARK_PAIRS = [
     (DATA_DIR / "optogenetic_rescue.pdf", OUTPUTS_DIR / "optogenetic_rescue_gold.md"),
     (DATA_DIR / "smart_microscopy.pdf", OUTPUTS_DIR / "smart_microscopy_gold.md"),
 ]
+
+LOG_PATH = BASE_DIR / "log.log"
+
+logger = logging.getLogger("run_benchmark")
+
+
+def configure_logging():
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(message)s")
+
+    file_handler = logging.FileHandler(LOG_PATH, mode="w")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
 
 def parse_args():
@@ -32,30 +50,33 @@ def parse_args():
     return parser.parse_args()
 
 def print_paper_evaluation(pdf_path, evaluation):
-    print(f"\n--- {pdf_path.name} ---")
+    logger.info(f"\n--- {pdf_path.name} ---")
     if evaluation is None:
-        print("No gold references found. Skipping.")
+        logger.info("No gold references found. Skipping.")
         return
 
     for field, metrics in evaluation.items():
-        print(f"{field}: coverage={metrics['coverage']}, hallucination={metrics['hallucination']}")
-        print(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
+        logger.info(f"{field}: coverage={metrics['coverage']}, hallucination={metrics['hallucination']}")
+        logger.info(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
 
 
 def print_paper_followup_evaluation(pdf_path, results):
-    print(f"\n--- {pdf_path.name} follow-up questions ---")
+    logger.info(f"\n--- {pdf_path.name} follow-up questions ---")
     if results is None:
-        print("No follow-up questions found. Skipping.")
+        logger.info("No follow-up questions found. Skipping.")
         return
 
     for result in results:
         expected = "answer" if result["answerable"] else "refusal"
         status = "correct" if result["correct"] else "WRONG"
-        print(f"[{status}] ({expected}) {result['question']}")
+        logger.info(f"[{status}] ({expected}) {result['question']}")
+        logger.info(f"  generated: {result['generated_answer']}")
+        if result["answerable"]:
+            logger.info(f"  reference: {result['reference_answer']}")
 
     totals = summarize_followup_results(results)
-    print(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
-    print(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
+    logger.info(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
+    logger.info(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
 
 
 def print_followup_summary(all_followup_results):
@@ -63,11 +84,11 @@ def print_followup_summary(all_followup_results):
         [result for results in all_followup_results if results for result in results]
     )
 
-    print("\n--- Follow-up Question Benchmark Summary ---")
-    print(f"Questions scored: {totals['total']}")
+    logger.info("\n--- Follow-up Question Benchmark Summary ---")
+    logger.info(f"Questions scored: {totals['total']}")
     if totals["total"]:
-        print(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
-        print(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
+        logger.info(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")
+        logger.info(f"Hallucination rate: {totals['hallucinated']}/{totals['total']} ({totals['hallucination_rate']:.1%})")
 
 
 def print_summary(all_evaluations):
@@ -87,15 +108,16 @@ def print_summary(all_evaluations):
 
     scored_papers = sum(1 for evaluation in all_evaluations if evaluation is not None)
 
-    print("\n--- Benchmark Summary ---")
-    print(f"Papers evaluated: {scored_papers}/{len(all_evaluations)}")
-    print(f"Fields scored: {total_fields}")
+    logger.info("\n--- Benchmark Summary ---")
+    logger.info(f"Papers evaluated: {scored_papers}/{len(all_evaluations)}")
+    logger.info(f"Fields scored: {total_fields}")
     if total_fields:
-        print(f"Coverage rate: {covered_fields}/{total_fields} ({covered_fields / total_fields:.1%})")
-        print(f"Hallucination rate: {hallucinated_fields}/{total_fields} ({hallucinated_fields / total_fields:.1%})")
+        logger.info(f"Coverage rate: {covered_fields}/{total_fields} ({covered_fields / total_fields:.1%})")
+        logger.info(f"Hallucination rate: {hallucinated_fields}/{total_fields} ({hallucinated_fields / total_fields:.1%})")
 
 
 def main():
+    configure_logging()
     args = parse_args()
 
     all_evaluations = []
