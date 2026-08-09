@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data" / "raw"
-CHROMA_DIR = BASE_DIR / "data" / "chroma"
+DATA_DIR = Path(os.getenv("RAG_DATA_DIR", BASE_DIR / "data" / "raw"))
+CHROMA_DIR = Path(os.getenv("RAG_CHROMA_DIR", BASE_DIR / "data" / "chroma"))
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DEFAULT_GOLD_PATH = OUTPUTS_DIR / "bert_gold.md"
 

@@ -11,7 +11,6 @@ function EvidenceList({ evidence = [] }) {
         <article
           className="evidence-card"
           data-chunk-id={item.chunk_id}
-          id={`evidence-${item.chunk_id}`}
           key={`${item.chunk_id}-${index}`}
         >
           <div className="evidence-meta">

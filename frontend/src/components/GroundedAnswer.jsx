@@ -8,7 +8,7 @@ const CITATION_RE = /\[([^[\]]+)\]/g
 // Only fires when the numbering starts at 1 and increments, to avoid
 // splitting on things like "Table 4." inside quoted evidence.
 function splitInlineEnumeration(text) {
-  const parts = text.split(/(?<=^|[\s:;])(?=\d+[.)]\s)/)
+  const parts = text.replace(/([\s:;])(\d+[.)]\s)/g, '$1\u0000$2').split('\u0000')
   if (parts.length < 2) return null
 
   let intro = ''
