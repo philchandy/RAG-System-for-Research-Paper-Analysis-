@@ -9,15 +9,11 @@ function AskPanel({
   onTopKChange,
   loading,
   onSubmit,
-  onSummarize,
 }) {
   return (
     <section className="card">
       <div className="card-heading">
         <h2>Ask</h2>
-        <button type="button" className="secondary-button" onClick={onSummarize} disabled={loading.summary}>
-          {loading.summary ? 'Summarizing…' : 'Summarize'}
-        </button>
       </div>
 
       <form className="query-form" onSubmit={onSubmit}>

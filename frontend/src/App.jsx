@@ -4,11 +4,11 @@ import Notice from './components/Notice'
 import LibraryPanel from './components/LibraryPanel'
 import AskPanel from './components/AskPanel'
 import ResultsPanel from './components/ResultsPanel'
+import SummariesPanel from './components/SummariesPanel'
 import { usePaperAssistant } from './hooks/usePaperAssistant'
 
 function App() {
   const {
-    backendStatus,
     documents,
     selectedDocumentIds,
     question,
@@ -20,8 +20,9 @@ function App() {
     selectedFile,
     setSelectedFile,
     queryResult,
-    summaryResult,
-    resultView,
+    summaries,
+    expandedSummaryId,
+    setExpandedSummaryId,
     message,
     error,
     loading,
@@ -33,22 +34,29 @@ function App() {
     handleDelete,
   } = usePaperAssistant()
 
+  const hasAnswer = Boolean(queryResult) || loading.query
+  const hasSummaries = summaries.length > 0 || Boolean(loading.summarizeId)
+
   return (
     <main className="app-shell">
-      <Header backendStatus={backendStatus} />
+      <Header />
       <Notice error={error} message={message} />
 
-      <div className={`layout ${resultView ? 'has-results' : ''}`}>
+      <div
+        className={`layout ${hasAnswer ? 'has-answer' : ''} ${hasSummaries ? 'has-summaries' : ''}`}
+      >
         <section className="agent-column">
           <LibraryPanel
             documents={documents}
             selectedDocumentIds={selectedDocumentIds}
+            summarizedIds={summaries.map((entry) => entry.documentId)}
             selectedFile={selectedFile}
             loading={loading}
             onRefresh={refreshDocuments}
             onUpload={handleUpload}
             onFileChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
             onToggleDocument={toggleDocument}
+            onSummarize={handleSummarize}
             onDelete={handleDelete}
           />
 
@@ -61,16 +69,19 @@ function App() {
             onTopKChange={setTopK}
             loading={loading}
             onSubmit={handleQuery}
-            onSummarize={handleSummarize}
           />
         </section>
 
-        <ResultsPanel
-          resultView={resultView}
-          queryResult={queryResult}
-          summaryResult={summaryResult}
-          loading={loading}
-        />
+        {hasAnswer && <ResultsPanel queryResult={queryResult} loading={loading} />}
+
+        {hasSummaries && (
+          <SummariesPanel
+            summaries={summaries}
+            summarizingId={loading.summarizeId}
+            expandedSummaryId={expandedSummaryId}
+            onExpandHandled={() => setExpandedSummaryId(null)}
+          />
+        )}
       </div>
     </main>
   )

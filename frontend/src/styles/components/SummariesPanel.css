@@ -1,0 +1,30 @@
+.summaries-column {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+
+.summary-section {
+  background: var(--paper-1);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-l);
+  padding: 14px 16px;
+}
+
+.summary-section > summary {
+  cursor: pointer;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.summary-section[open] > summary {
+  margin-bottom: 12px;
+}
+
+.summary-section.pending {
+  text-align: center;
+}

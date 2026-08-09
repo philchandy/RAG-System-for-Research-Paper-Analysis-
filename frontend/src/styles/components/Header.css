@@ -14,33 +14,3 @@
   letter-spacing: -0.01em;
   color: var(--ink);
 }
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--paper-2);
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-  letter-spacing: 0.02em;
-}
-
-.status-pill span {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--warn);
-}
-
-.status-pill.online span {
-  background: var(--good);
-}
-
-.status-pill.offline span {
-  background: var(--bad);
-}

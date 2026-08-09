@@ -44,6 +44,28 @@
   color: var(--ink);
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.summarize-button {
+  background: transparent;
+  border: 1px solid var(--line);
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--accent-strong);
+  white-space: nowrap;
+}
+
+.summarize-button:hover:not(:disabled) {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint);
+}
+
 .danger-button {
   background: transparent;
   border: 1px solid var(--line);

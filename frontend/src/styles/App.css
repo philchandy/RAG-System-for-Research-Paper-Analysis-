@@ -18,14 +18,22 @@
   width: 100%;
 }
 
-.layout.has-results {
+/* Two columns when either an answer or summaries are present. */
+.layout.has-answer,
+.layout.has-summaries {
   grid-template-columns: minmax(320px, 420px) 1fr;
   align-items: start;
 }
 
-.layout.has-results .agent-column {
+.layout.has-answer .agent-column,
+.layout.has-summaries .agent-column {
   max-width: none;
   margin: 0;
+}
+
+/* Three columns when both: answer centered, summaries on the right. */
+.layout.has-answer.has-summaries {
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) minmax(260px, 340px);
 }
 
 .card {
@@ -110,12 +118,30 @@ textarea {
   line-height: 1.5;
 }
 
+@media (max-width: 1100px) {
+  /* Collapse three columns to two: summaries wrap under the answer. */
+  .layout.has-answer.has-summaries {
+    grid-template-columns: minmax(300px, 380px) 1fr;
+  }
+
+  .layout.has-answer.has-summaries .summaries-column {
+    grid-column: 2;
+  }
+}
+
 @media (max-width: 900px) {
-  .layout.has-results {
+  .layout.has-answer,
+  .layout.has-summaries,
+  .layout.has-answer.has-summaries {
     grid-template-columns: 1fr;
   }
 
-  .layout.has-results .agent-column {
+  .layout.has-answer.has-summaries .summaries-column {
+    grid-column: auto;
+  }
+
+  .layout.has-answer .agent-column,
+  .layout.has-summaries .agent-column {
     max-width: 720px;
     margin: 0 auto;
   }

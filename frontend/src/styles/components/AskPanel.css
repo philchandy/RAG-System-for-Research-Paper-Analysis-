@@ -20,17 +20,6 @@
   flex: 0 0 auto;
 }
 
-.secondary-button {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
-}
-
-.secondary-button:hover:not(:disabled) {
-  background: var(--paper-3);
-  color: var(--ink);
-}
-
 @media (max-width: 480px) {
   .control-row {
     flex-wrap: wrap;

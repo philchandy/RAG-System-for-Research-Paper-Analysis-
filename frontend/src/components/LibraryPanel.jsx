@@ -3,12 +3,14 @@ import '../styles/components/LibraryPanel.css'
 function LibraryPanel({
   documents,
   selectedDocumentIds,
+  summarizedIds,
   selectedFile,
   loading,
   onRefresh,
   onUpload,
   onFileChange,
   onToggleDocument,
+  onSummarize,
   onDelete,
 }) {
   return (
@@ -45,14 +47,28 @@ function LibraryPanel({
                 <small>{document.chunk_count} chunks</small>
               </span>
             </label>
-            <button
-              type="button"
-              className="danger-button"
-              onClick={() => onDelete(document.document_id)}
-              disabled={loading.deleteId === document.document_id}
-            >
-              {loading.deleteId === document.document_id ? '…' : 'Remove'}
-            </button>
+            <div className="row-actions">
+              <button
+                type="button"
+                className="summarize-button"
+                onClick={() => onSummarize(document.document_id, document.source)}
+                disabled={Boolean(loading.summarizeId)}
+              >
+                {loading.summarizeId === document.document_id
+                  ? '…'
+                  : summarizedIds.includes(document.document_id)
+                    ? 'View summary'
+                    : 'Summarize'}
+              </button>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => onDelete(document.document_id)}
+                disabled={loading.deleteId === document.document_id}
+              >
+                {loading.deleteId === document.document_id ? '…' : 'Remove'}
+              </button>
+            </div>
           </article>
         ))}
       </div>

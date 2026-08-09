@@ -19,15 +19,15 @@ export function usePaperAssistant() {
   const [answerMode, setAnswerMode] = useState('extractive')
   const [selectedFile, setSelectedFile] = useState(null)
   const [queryResult, setQueryResult] = useState(null)
-  const [summaryResult, setSummaryResult] = useState(null)
-  const [resultView, setResultView] = useState(null)
+  const [summaries, setSummaries] = useState([])
+  const [expandedSummaryId, setExpandedSummaryId] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState({
     documents: false,
     upload: false,
     query: false,
-    summary: false,
+    summarizeId: null,
     deleteId: null,
   })
 
@@ -97,6 +97,7 @@ export function usePaperAssistant() {
       setSelectedFile(null)
       await refreshDocuments()
       setSelectedDocumentIds((current) => [...new Set([...current, payload.report.document_id])])
+      await handleSummarize(payload.report.document_id, payload.report.source)
     } catch (err) {
       setError(err.message)
       setMessage('')
@@ -114,7 +115,6 @@ export function usePaperAssistant() {
 
     setError('')
     setMessage('')
-    setResultView('answer')
     setLoading((current) => ({ ...current, query: true }))
 
     try {
@@ -130,19 +130,34 @@ export function usePaperAssistant() {
     }
   }
 
-  async function handleSummarize() {
+  async function handleSummarize(documentId, source) {
+    // Re-clicking an already-summarized doc expands its section instead of refetching.
+    if (summaries.some((entry) => entry.documentId === documentId)) {
+      setExpandedSummaryId(documentId)
+      return
+    }
+
     setError('')
     setMessage('')
-    setResultView('summary')
-    setLoading((current) => ({ ...current, summary: true }))
+    setLoading((current) => ({ ...current, summarizeId: documentId }))
 
     try {
-      const payload = await summarizeDocuments(makeRequestPayload())
-      setSummaryResult(payload)
+      const payload = await summarizeDocuments({
+        document_ids: [documentId],
+        top_k: Number(topK),
+        answer_mode: answerMode,
+      })
+      const label =
+        source || documents.find((doc) => doc.document_id === documentId)?.source || documentId
+      setSummaries((current) => [
+        ...current.filter((entry) => entry.documentId !== documentId),
+        { documentId, source: label, summary: payload.summary },
+      ])
+      setExpandedSummaryId(documentId)
     } catch (err) {
       setError(err.message)
     } finally {
-      setLoading((current) => ({ ...current, summary: false }))
+      setLoading((current) => ({ ...current, summarizeId: null }))
     }
   }
 
@@ -155,8 +170,7 @@ export function usePaperAssistant() {
       const payload = await deleteDocument(documentId)
       setMessage(`Deleted ${payload.source || payload.document_id}.`)
       setQueryResult(null)
-      setSummaryResult(null)
-      setResultView(null)
+      setSummaries((current) => current.filter((entry) => entry.documentId !== documentId))
       await refreshDocuments()
     } catch (err) {
       setError(err.message)
@@ -178,8 +192,9 @@ export function usePaperAssistant() {
     selectedFile,
     setSelectedFile,
     queryResult,
-    summaryResult,
-    resultView,
+    summaries,
+    expandedSummaryId,
+    setExpandedSummaryId,
     message,
     error,
     loading,
