@@ -21,7 +21,7 @@ from rag.evaluation import (
     judge_summary_field,
 )
 from rag.answer import call_openai
-from rag.config import SUMMARY_QUERIES
+from rag.config import SUMMARY_QUERIES, SUMMARY_TOP_K
 from rag.resources import preload
 
 
@@ -158,7 +158,7 @@ def answer_question(query, top_k=5, document_ids=None, answer_mode="extractive")
     return result
 
 
-def summarize_document(document_ids=None, top_k=5, answer_mode="extractive"):
+def summarize_document(document_ids=None, top_k=SUMMARY_TOP_K, answer_mode="extractive"):
     """
     Builds the structured problem/method/dataset/results/limitations summary.
     """
@@ -166,7 +166,7 @@ def summarize_document(document_ids=None, top_k=5, answer_mode="extractive"):
     return build_summary_dict(summary_evidence, answer_mode=answer_mode)
 
 
-def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=5, judge_mode="auto"):
+def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=SUMMARY_TOP_K, judge_mode="auto"):
     """
     Runs the optional gold benchmark. Returns metrics per summary field,
     or None if the gold file has no references.

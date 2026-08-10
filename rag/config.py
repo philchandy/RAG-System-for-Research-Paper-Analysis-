@@ -8,25 +8,30 @@ CHROMA_DIR = Path(os.getenv("RAG_CHROMA_DIR", BASE_DIR / "data" / "chroma"))
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DEFAULT_GOLD_PATH = OUTPUTS_DIR / "bert_gold.md"
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 RERANKER_MODEL = "BAAI/bge-reranker-base"
 DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 150
+
+# Summary fields ask broad, multi-fact questions ("what method does this
+# paper use?") that need to cover more ground than a single-fact follow-up
+# question, so they get a larger evidence budget.
+SUMMARY_TOP_K = 8
 
 SUMMARY_QUERIES = {
 	"problem": "What is the motivating problem that this paper aims to solve?",
 	"method": "What method, model, or training approach does this paper use?",
 	"dataset": "What datasets or data sources does this paper use?",
 	"results": "What datasets, benchmarks, and results are reported in this paper?",
-	"limitations": "What limitations, costs, or failure cases does this paper report?",
+	"limitations": "What does this paper explicitly state as a limitation, unresolved question, or caveat of its own study, method, or results — not a limitation of prior work?",
 }
 
 SUMMARY_SECTION_HINTS = {
-	"problem": ["introduction", "abstract", "background"],
-	"method": ["method", "methods", "star methods", "materials and methods", "approach"],
-	"dataset": ["dataset", "data", "materials and methods", "experiments"],
-	"results": ["results", "experiments", "evaluation", "discussion"],
-	"limitations": ["limitations", "discussion", "conclusion", "future work", "outlook"],
+	"problem": ["introduction", "abstract", "background", "motivation"],
+	"method": ["method", "methods", "star methods", "materials and methods", "approach", "model", "system design", "architecture"],
+	"dataset": ["dataset", "data", "materials and methods", "experiments", "summary statistics", "sample"],
+	"results": ["results", "experiments", "evaluation", "discussion", "findings"],
+	"limitations": ["limitations", "discussion", "conclusion", "future work", "outlook", "caveats"],
 }
 
 

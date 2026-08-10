@@ -53,7 +53,7 @@ def parse_args():
         "--top-k",
         type=int,
         default=5,
-        help="Number of evidence chunks to retrieve per summary field.",
+        help="Number of evidence chunks to retrieve per follow-up question (summary fields use a fixed, larger budget).",
     )
     parser.add_argument(
         "--judge",
@@ -160,7 +160,6 @@ def main():
             gold_path,
             document_ids=[document_id],
             answer_mode=args.answer_mode,
-            top_k=args.top_k,
             judge_mode=args.judge_mode,
         )
         print_paper_evaluation(pdf_path, evaluation)

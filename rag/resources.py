@@ -21,7 +21,13 @@ _RERANKER = None
 def get_embeddings():
     global _EMBEDDINGS
     if _EMBEDDINGS is None:
-        _EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        query_encode_kwargs = {}
+        if "bge" in EMBEDDING_MODEL.lower():
+            query_encode_kwargs = {"prompt": "Represent this sentence for searching relevant passages: "}
+        _EMBEDDINGS = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            query_encode_kwargs=query_encode_kwargs,
+        )
     return _EMBEDDINGS
 
 

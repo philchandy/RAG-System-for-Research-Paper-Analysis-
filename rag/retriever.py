@@ -4,7 +4,7 @@ from langchain_core.documents import Document
 from rank_bm25 import BM25Okapi
 
 from rag.resources import get_vector_store
-from rag.reranker import cross_encoder_rerank
+from rag.reranker import cross_encoder_rerank, score_with_cross_encoder
 
 
 RRF_K = 60
@@ -122,6 +122,24 @@ def filter_documents_by_section(documents, section_filter):
     return [doc for doc in documents if section_matches(doc.metadata.get("section"), section_filter)]
 
 
+def section_boosted_rerank(query, documents, section_filter, limit):
+    """
+    Reranks by relevance, preferring section-filter matches without discarding
+    non-matching documents.
+    """
+    scored_documents = score_with_cross_encoder(query, documents)
+    ranked_documents = sorted(
+        scored_documents,
+        key=lambda item: (
+            section_matches(item[0].metadata.get("section"), section_filter),
+            float(item[1]),
+        ),
+        reverse=True,
+    )
+
+    return [doc for doc, _ in ranked_documents[:limit]]
+
+
 def make_document_filter(document_ids):
     """
     Builds a Chroma where-filter for one or many document ids.
@@ -165,7 +183,9 @@ def retrieve_metadata_route(vector_store, route, document_id=None):
 def retrieve(route, question, k=5, document_id=None):
     vector_store = make_vector_store()
     # Wide candidate pool for fusion and reranking; final result is trimmed to k.
-    candidate_limit = max(k, 12) if route.use_vector_search and len(route.queries) > 1 else k
+    # Scales with k so a larger k (e.g. summary fields) actually searches deeper
+    # instead of reranking the same fixed-size pool as a smaller k would.
+    candidate_limit = max(k * 3, 12) if route.use_vector_search and len(route.queries) > 1 else k
 
     if not route.use_vector_search:
         return retrieve_metadata_route(vector_store, route, document_id=document_id)[:k]
@@ -178,22 +198,17 @@ def retrieve(route, question, k=5, document_id=None):
         search_filter=search_filter,
         document_ids=document_id,
     )
-    unfiltered_results = results
-    results = filter_documents_by_section(unfiltered_results, route.section_filter)
-
-    if not results and route.section_filter:
-        results = retrieve_metadata_route(vector_store, route, document_id=document_id)
 
     if not results:
-        results = unfiltered_results
-    elif route.section_filter and len(results) < k:
-        seen_chunk_ids = {doc.metadata.get("chunk_id") for doc in results}
-        results = results + [
-            doc for doc in unfiltered_results
-            if doc.metadata.get("chunk_id") not in seen_chunk_ids
-        ]
+        return []
 
     if route.use_reranker:
-        results = cross_encoder_rerank(question, results, limit=candidate_limit)
+        if route.section_filter:
+            results = section_boosted_rerank(question, results, route.section_filter, limit=candidate_limit)
+        else:
+            results = cross_encoder_rerank(question, results, limit=candidate_limit)
+    elif route.section_filter:
+        filtered = filter_documents_by_section(results, route.section_filter)
+        results = filtered or retrieve_metadata_route(vector_store, route, document_id=document_id) or results
 
     return results[:k]

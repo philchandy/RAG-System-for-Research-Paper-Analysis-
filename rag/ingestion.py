@@ -3,6 +3,39 @@ import pymupdf
 
 NUMBERED_SECTION_PATTERN = re.compile(r"^(\d+(?:\.\d+)*)\.?\s+([A-Z].+)$")
 ROMAN_NUMERAL_SECTION_PATTERN = re.compile(r"^[IVXLCDM]{1,6}\.\s+[A-Z].+")
+BARE_SECTION_NUMBER_PATTERN = re.compile(r"^[1-9]\d?(?:\.\d{1,2})*$")
+TITLE_CASE_CONNECTOR_WORDS = {
+    "and", "or", "of", "the", "in", "for", "to", "with", "on", "at", "via", "a", "an", "vs",
+}
+
+
+def looks_like_generic_title(text):
+    """
+    True for short natural-language headings while excluding all-caps runs.
+    """
+    words = text.split()
+    if not (2 <= len(words) <= 8):
+        return False
+    if not words[0][0].isupper() or not words[-1][0].isupper():
+        return False
+
+    has_title_case_word = False
+    for word in words:
+        cleaned = word.strip("-")
+        if not cleaned:
+            return False
+        if cleaned.lower() in TITLE_CASE_CONNECTOR_WORDS:
+            continue
+        if not cleaned.isalpha():
+            return False
+        if cleaned[0].isupper() and cleaned[1:].islower():
+            has_title_case_word = True
+        elif cleaned.isupper() and len(cleaned) <= 4:
+            continue
+        else:
+            return False
+
+    return has_title_case_word
 
 DATE_LIKE_PATTERN = re.compile(r"^\d{1,2}\s+[A-Za-z]+\s+\d{4}$")
 NAMED_SECTION_HEADERS = {
@@ -71,7 +104,7 @@ def normalize_header_text(text):
 FIGURE_TABLE_LABEL_PATTERN = re.compile(r"^(figure|fig\.?|table)\s*$", re.IGNORECASE)
 
 
-def is_section_header(line, previous_line=None):
+def is_section_header(line, previous_line=None, previous_line_isolated=False):
     """
     Heuristic detector for major paper section headers.
     """
@@ -85,6 +118,19 @@ def is_section_header(line, previous_line=None):
         return False
 
     if stripped[0].isupper() and normalize_header_text(stripped) in NAMED_SECTION_HEADERS:
+        return True
+
+    if (
+        previous_line
+        and previous_line_isolated
+        and BARE_SECTION_NUMBER_PATTERN.match(previous_line.strip())
+        and looks_like_generic_title(stripped)
+    ):
+        # A running header immediately followed by a page number ("...LONG
+        # ARITHMETIC PROGRESSIONS" / "41") also looks like a bare section
+        # number, but unlike a real "4.1" / "Productivity Metrics" pair,
+        # that number isn't itself preceded by a blank line — it's glued
+        # to the header text above it.
         return True
 
     if ROMAN_NUMERAL_SECTION_PATTERN.match(stripped):
@@ -132,14 +178,17 @@ def split_into_sections(text):
     current_title = "Front Matter"
     current_lines = []
     previous_line = None
+    previous_line_isolated = True
+    pending_isolated = True
 
     for line in lines:
         if not line:
             if current_lines and current_lines[-1] != "":
                 current_lines.append("")
+            pending_isolated = True
             continue
 
-        if is_section_header(line, previous_line=previous_line):
+        if is_section_header(line, previous_line=previous_line, previous_line_isolated=previous_line_isolated):
             if current_lines:
                 sections.append({
                     "section": current_title,
@@ -148,10 +197,14 @@ def split_into_sections(text):
             current_title = line
             current_lines = []
             previous_line = line
+            previous_line_isolated = pending_isolated
+            pending_isolated = False
             continue
 
         current_lines.append(line)
         previous_line = line
+        previous_line_isolated = pending_isolated
+        pending_isolated = False
 
     if current_lines:
         sections.append({
