@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument(
         "--top-k",
         type=int,
-        default=3,
+        default=5,
         help="Number of evidence chunks to retrieve per summary field.",
     )
     parser.add_argument(
@@ -72,6 +72,8 @@ def print_paper_evaluation(pdf_path, evaluation):
             logger.info(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
         if metrics.get("reason"):
             logger.info(f"  judge reason: {metrics['reason']}")
+        if metrics.get("judge_agreement") is False:
+            logger.info("  judge split vote")
 
 
 def print_paper_followup_evaluation(pdf_path, results):
@@ -89,6 +91,8 @@ def print_paper_followup_evaluation(pdf_path, results):
             logger.info(f"  reference: {result['reference_answer']}")
         if result.get("reason"):
             logger.info(f"  judge reason: {result['reason']}")
+        if result.get("judge_agreement") is False:
+            logger.info("  judge split vote")
 
     totals = summarize_followup_results(results)
     logger.info(f"Accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")

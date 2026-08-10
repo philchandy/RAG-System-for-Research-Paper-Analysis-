@@ -77,7 +77,7 @@ def generate_schema(query, k=3, document_id=None, answer_mode="extractive"):
     return answer_query(query, top_k=k, document_id=document_id, answer_mode=answer_mode)
 
 
-def retrieve_summary_evidence(summary_queries, top_k=3, document_id=None):
+def retrieve_summary_evidence(summary_queries, top_k=5, document_id=None):
     """
     Retrieves top chunks for each fixed summary query and returns a structured dict.
     """

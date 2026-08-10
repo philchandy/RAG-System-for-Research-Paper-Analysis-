@@ -5,6 +5,7 @@ This module is the programmatic entry point for the RAG engine — CLI and
 web layers should call these functions and handle presentation themselves.
 """
 
+from functools import partial
 from pathlib import Path
 
 from rag.ingestion import extract_text_from_pdf
@@ -25,6 +26,13 @@ from rag.resources import preload
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Ensemble of judge models
+JUDGE_MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]
+
+
+def make_judge_calls():
+    return [partial(call_openai, model=model) for model in JUDGE_MODELS]
 
 
 def resolve_project_path(path):
@@ -132,7 +140,7 @@ def delete_document(document_id, pdf_dir=None):
     }
 
 
-def answer_question(query, top_k=3, document_ids=None, answer_mode="extractive"):
+def answer_question(query, top_k=5, document_ids=None, answer_mode="extractive"):
     """
     Answers a question from evidence retrieved across the selected documents.
 
@@ -150,7 +158,7 @@ def answer_question(query, top_k=3, document_ids=None, answer_mode="extractive")
     return result
 
 
-def summarize_document(document_ids=None, top_k=3, answer_mode="extractive"):
+def summarize_document(document_ids=None, top_k=5, answer_mode="extractive"):
     """
     Builds the structured problem/method/dataset/results/limitations summary.
     """
@@ -158,7 +166,7 @@ def summarize_document(document_ids=None, top_k=3, answer_mode="extractive"):
     return build_summary_dict(summary_evidence, answer_mode=answer_mode)
 
 
-def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3, judge_mode="auto"):
+def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=5, judge_mode="auto"):
     """
     Runs the optional gold benchmark. Returns metrics per summary field,
     or None if the gold file has no references.
@@ -173,13 +181,15 @@ def evaluate_against_gold(gold_path, document_ids=None, answer_mode="extractive"
     use_llm_judge = judge_mode == "llm" or (judge_mode == "auto" and answer_mode == "openai")
     judge_fn = None
     if use_llm_judge:
+        judge_calls = make_judge_calls()
+
         def judge_fn(field_name, generated_field, gold_bullets):
-            return judge_summary_field(field_name, generated_field, gold_bullets, call_openai)
+            return judge_summary_field(field_name, generated_field, gold_bullets, judge_calls)
 
     return evaluate_summary_dict(summary_dict, gold_references, judge_fn=judge_fn)
 
 
-def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=3, judge_mode="auto"):
+def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="extractive", top_k=5, judge_mode="auto"):
     """
     Runs the optional follow-up question benchmark. Returns a list of
     per-question results, or None if the gold file has no follow-up questions.
@@ -195,7 +205,9 @@ def evaluate_followups_against_gold(gold_path, document_ids=None, answer_mode="e
     use_llm_judge = judge_mode == "llm" or (judge_mode == "auto" and answer_mode == "openai")
     judge_fn = None
     if use_llm_judge:
+        judge_calls = make_judge_calls()
+
         def judge_fn(entry, generated_answer):
-            return judge_followup_answer(entry, generated_answer, call_openai)
+            return judge_followup_answer(entry, generated_answer, judge_calls)
 
     return evaluate_followup_questions(followup_entries, answer_fn, judge_fn=judge_fn)

@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument(
         "--top-k",
         type=int,
-        default=3,
+        default=5,
         help="Number of evidence chunks to retrieve.",
     )
     parser.add_argument(
@@ -172,6 +172,8 @@ def print_evaluation(evaluation, gold_path):
             print("Matched keywords:", metrics["matched_keywords"])
         if metrics.get("reason"):
             print("Judge reason:", metrics["reason"])
+        if metrics.get("judge_agreement") is False:
+            print("Judge split vote")
 
 
 def print_followup_evaluation(results):
@@ -191,6 +193,8 @@ def print_followup_evaluation(results):
             print("Matched keywords:", result["matched_keywords"])
         if result.get("reason"):
             print("Judge reason:", result["reason"])
+        if result.get("judge_agreement") is False:
+            print("Judge split vote")
 
     totals = summarize_followup_results(results)
     print(f"\nFollow-up accuracy: {totals['correct']}/{totals['total']} ({totals['accuracy']:.1%})")

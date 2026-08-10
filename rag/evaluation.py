@@ -87,25 +87,29 @@ def build_summary_field_judge_prompt(field_name, generated_field, gold_bullets):
         f"Generated field content:\n{generated_text}",
         "",
         "Grade the generated content:",
-        "- COVERAGE: hit if it captures the core claims from the gold bullets (wording "
-        "can differ, it doesn't need to be exhaustive), miss if it fails to reflect the "
-        "gold bullets' content or declines to answer.",
+        "- COVERAGE: hit if it correctly captures the main/primary claim of the gold "
+        "bullets (wording can differ, and it's fine to miss secondary details or only "
+        "some of several examples/numbers listed in a bullet); miss only if it fails to "
+        "reflect the primary claim, is off-topic, contradicts the gold reference, or "
+        "declines to answer. Do not grade it miss merely for omitting minor sub-facts "
+        "while still getting the main point right.",
         "- HALLUCINATION: yes if the generated content states something that contradicts "
         "the gold reference or is a fabricated/incorrect claim for this field; no "
         "otherwise (an honest refusal is never hallucination).",
         "",
+        "Reason through the comparison first, then commit to your verdict based on that "
+        "reasoning — don't decide the verdict first and justify it afterward.",
         "Respond in exactly this format:",
+        "REASON: one short sentence explaining your reasoning",
         "COVERAGE: hit or miss",
         "HALLUCINATION: yes or no",
-        "REASON: one short sentence",
     ])
 
 
 def parse_summary_field_judge_response(response_text):
     """
     Parses the judge's COVERAGE/HALLUCINATION/REASON response into a
-    (coverage_hit, hallucination, reason) tuple, with a conservative
-    fallback ("miss", not hallucinated) if the format doesn't match.
+    (coverage_hit, hallucination, reason) tuple.
     """
     coverage_match = re.search(r"COVERAGE:\s*(hit|miss)", response_text, re.IGNORECASE)
     hallucination_match = re.search(r"HALLUCINATION:\s*(yes|no)", response_text, re.IGNORECASE)
@@ -118,23 +122,44 @@ def parse_summary_field_judge_response(response_text):
     return coverage_hit, hallucination, reason
 
 
-def judge_summary_field(field_name, generated_field, gold_bullets, llm_call):
+def majority_vote(values, tie_value):
     """
-    Scores one generated summary field using an LLM judge instead of
-    keyword overlap. llm_call(prompt) -> response text.
+    Aggregates boolean judge votes by majority.
+    """
+    true_count = sum(1 for value in values if value)
+    false_count = len(values) - true_count
+    if true_count > false_count:
+        return True
+    if false_count > true_count:
+        return False
+    return tie_value
+
+
+def judge_summary_field(field_name, generated_field, gold_bullets, llm_calls):
+    """
+    Scores one generated summary field using an ensemble of LLM judges
+    instead of keyword overlap.
     """
     if not gold_bullets:
         return {"coverage": "miss", "hallucination": "no", "matched_keywords": [], "reason": "No gold reference bullets for this field."}
 
+    if callable(llm_calls):
+        llm_calls = [llm_calls]
+
     prompt = build_summary_field_judge_prompt(field_name, generated_field, gold_bullets)
-    response_text = llm_call(prompt)
-    coverage_hit, hallucination, reason = parse_summary_field_judge_response(response_text)
+    votes = [parse_summary_field_judge_response(llm_call(prompt)) for llm_call in llm_calls]
+
+    coverage_hit = majority_vote([vote[0] for vote in votes], tie_value=False)
+    hallucination = majority_vote([vote[1] for vote in votes], tie_value=True)
+    reasons = [vote[2] for vote in votes]
+    agreement = len(set(vote[:2] for vote in votes)) == 1
 
     return {
         "coverage": "hit" if coverage_hit else "miss",
         "hallucination": "yes" if hallucination else "no",
         "matched_keywords": [],
-        "reason": reason,
+        "reason": reasons[0] if len(reasons) == 1 else " | ".join(reasons),
+        "judge_agreement": agreement,
     }
 
 
@@ -268,10 +293,12 @@ def build_followup_judge_prompt(entry, generated_answer):
         "unsupported (for unanswerable questions, hallucination means it fabricated an "
         "answer instead of declining).",
         "",
+        "Reason through the comparison first, then commit to your verdict based on that "
+        "reasoning — don't decide the verdict first and justify it afterward.",
         "Respond in exactly this format:",
+        "REASON: one short sentence explaining your reasoning",
         "VERDICT: correct or incorrect",
         "HALLUCINATION: yes or no",
-        "REASON: one short sentence",
     ])
 
 
@@ -291,21 +318,29 @@ def parse_followup_judge_response(response_text):
     return correct, hallucination, reason
 
 
-def judge_followup_answer(entry, generated_answer, llm_call):
+def judge_followup_answer(entry, generated_answer, llm_calls):
     """
-    Scores one follow-up question's generated answer using an LLM judge
-    instead of keyword overlap. llm_call(prompt) -> response text.
+    Scores one follow-up question's generated answer using an ensemble of
+    LLM judges instead of keyword overlap.
     """
+    if callable(llm_calls):
+        llm_calls = [llm_calls]
+
     prompt = build_followup_judge_prompt(entry, generated_answer)
-    response_text = llm_call(prompt)
-    correct, hallucination, reason = parse_followup_judge_response(response_text)
+    votes = [parse_followup_judge_response(llm_call(prompt)) for llm_call in llm_calls]
+
+    correct = majority_vote([vote[0] for vote in votes], tie_value=False)
+    hallucination = majority_vote([vote[1] for vote in votes], tie_value=True)
+    reasons = [vote[2] for vote in votes]
+    agreement = len(set(vote[:2] for vote in votes)) == 1
 
     return {
         "expected": "answer" if entry["answerable"] else "refusal",
         "correct": correct,
         "hallucination": "yes" if hallucination else "no",
         "matched_keywords": [],
-        "reason": reason,
+        "reason": reasons[0] if len(reasons) == 1 else " | ".join(reasons),
+        "judge_agreement": agreement,
     }
 
 

@@ -14,7 +14,7 @@ DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 150
 
 SUMMARY_QUERIES = {
-	"problem": "What problem or limitation of prior approaches does this paper address?",
+	"problem": "What is the motivating problem that this paper aims to solve?",
 	"method": "What method, model, or training approach does this paper use?",
 	"dataset": "What datasets or data sources does this paper use?",
 	"results": "What datasets, benchmarks, and results are reported in this paper?",
