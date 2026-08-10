@@ -38,35 +38,17 @@ Answerable from the paper:
   A: That the prime numbers contain infinitely many arithmetic progressions of length k, for every k (Theorem 1.1).
 - Q: What are the three main ingredients of the proof?
   A: Szemerédi's theorem, a new transference principle (the paper's main new contribution), and a result of Goldston and Yıldırım used to embed the primes in a pseudorandom set of "almost primes."
-- Q: What two conditions define a pseudorandom measure?
-  A: The linear forms condition (Definition 3.1) and the correlation condition (Definition 3.2); a measure is k-pseudorandom when it satisfies the (k·2^(k−1), 3k−4, k)-linear forms condition and the 2^(k−1)-correlation condition.
 - Q: Who first proved the existence of infinitely many three-term (k = 3) arithmetic progressions of primes, and when?
   A: Van der Corput, in 1939, using Vinogradov's method of prime number sums.
 - Q: What was the longest known arithmetic progression of primes at the time the paper was written?
   A: A progression of length 23, found in 2004 by Markus Frind, Paul Underwood, and Paul Jobling.
 - Q: What generalized theorem, analogous to Szemerédi's theorem but for the primes, does the paper prove?
   A: Theorem 1.2: any subset of the primes with positive relative upper density contains infinitely many arithmetic progressions of length k for all k.
-- Q: Why can't the von Mangoldt function itself be used as the pseudorandom measure ν?
-  A: Two reasons: the primes are concentrated on the φ(q) residue classes coprime to q, whereas a pseudorandom measure is uniformly distributed across all q classes; and verifying the linear forms and correlation conditions for Λ would be comparable in difficulty to the Hardy–Littlewood prime tuples conjecture.
-- Q: What does the W-trick do, and why is it needed?
-  A: It restricts the primes to n ≡ 1 (mod W), where W is the product of primes up to a slowly growing w(N), eliminating the local irregularities from small prime divisors that would otherwise obstruct pseudorandomness.
-- Q: Besides the primes, what other set does the paper obtain long progressions in?
-  A: The sums of two squares — by applying Theorem 1.2 to the primes p ≡ 1 (mod 4).
-
-Answered negatively or ruled out in the paper (the paper takes an explicit position):
-- Q: Does the paper resolve the quantitative dependence of N₀(δ, k) in Szemerédi's theorem?
-  A: No — the paper explicitly states this remains a famous open problem, and notes that its own proof needs no quantitative estimate on N₀(δ, k) at all.
-- Q: Does the paper make progress on the Hardy–Littlewood prime tuples conjecture?
-  A: No — it says explicitly that its methods yield no progress there, and that the conjecture is strictly harder than what the paper proves.
-- Q: Is the paper fully self-contained?
-  A: No — it assumes Szemerédi's theorem (described as one "rather large" caveat) plus standard analytic number theory: the prime number theorem, Dirichlet's theorem, and the classical zero-free region for ζ.
-- Q: Does the paper establish the Hardy–Littlewood asymptotic C_k N²/log^k N?
-  A: No — it explicitly says it does not come close, obtaining only a lower bound with a very small unspecified γ(k).
 
 Not answered in the paper:
 - Q: What is the exact numerical value of the constant γ(k)?
   A: Not given — only "some very small γ(k) > 0," with the paper noting the bound it could extract would be extremely poor and that no attempt was made to optimise it.
-- Q: Does the paper prove the conjectured Bergelson–Leibman-type polynomial result for the primes?
-  A: No — it is raised as something the transference philosophy suggests should be true, requiring modifications the paper does not carry out. A note added in press credits the result to the second author and T. Ziegler elsewhere.
+- Q: Does the paper resolve the quantitative dependence of N₀(δ, k) in Szemerédi's theorem?
+  A: No — the paper explicitly states this remains a famous open problem, and notes that its own proof needs no quantitative estimate on N₀(δ, k) at all.
 - Q: Does the paper give an explicit algorithm or bound for locating a k-term progression of primes below some N?
   A: No — the result is an infinitude/counting statement; no effective search bound is derived.

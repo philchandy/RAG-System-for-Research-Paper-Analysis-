@@ -1,7 +1,10 @@
 import re
 import pymupdf
 
-NUMBERED_SECTION_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+[A-Z].+")
+NUMBERED_SECTION_PATTERN = re.compile(r"^(\d+(?:\.\d+)*)\.?\s+([A-Z].+)$")
+ROMAN_NUMERAL_SECTION_PATTERN = re.compile(r"^[IVXLCDM]{1,6}\.\s+[A-Z].+")
+
+DATE_LIKE_PATTERN = re.compile(r"^\d{1,2}\s+[A-Za-z]+\s+\d{4}$")
 NAMED_SECTION_HEADERS = {
     "abstract",
     "introduction",
@@ -69,7 +72,10 @@ def normalize_header_text(text):
     return re.sub(r"\s+", " ", normalized).strip().lower()
 
 
-def is_section_header(line):
+FIGURE_TABLE_LABEL_PATTERN = re.compile(r"^(figure|fig\.?|table)\s*$", re.IGNORECASE)
+
+
+def is_section_header(line, previous_line=None):
     """
     Heuristic detector for major paper section headers.
     """
@@ -79,17 +85,39 @@ def is_section_header(line):
     if len(stripped) > 80:
         return False
 
+    if previous_line and FIGURE_TABLE_LABEL_PATTERN.match(previous_line.strip()):
+        return False
+
     if stripped[0].isupper() and normalize_header_text(stripped) in NAMED_SECTION_HEADERS:
         return True
 
-    if not NUMBERED_SECTION_PATTERN.match(stripped):
+    if ROMAN_NUMERAL_SECTION_PATTERN.match(stripped):
+        if any(char.isdigit() for char in stripped):
+            return False
+        if "," in stripped:
+            return False
+        if len(stripped.split()) > 6:
+            return False
+        return True
+
+    numbered_match = NUMBERED_SECTION_PATTERN.match(stripped)
+    if not numbered_match:
         return False
 
-    # Reject sentence fragments that happen to start with a number,
-    # such as "0.3 F1 behind fine-tuning the entire model. This".
-    if stripped.endswith((".", ",", ";", ":")):
+    if DATE_LIKE_PATTERN.match(stripped):
         return False
-    if ". " in stripped:
+
+    leading_number = int(numbered_match.group(1).split(".")[0])
+    if leading_number > 20:
+        return False
+
+    title_part = numbered_match.group(2)
+    if "," in title_part:
+        return False
+
+    if title_part.endswith((".", ",", ";", ":")):
+        return False
+    if ". " in title_part:
         return False
     if stripped.startswith("0"):
         return False
@@ -107,6 +135,7 @@ def split_into_sections(text):
     sections = []
     current_title = "Front Matter"
     current_lines = []
+    previous_line = None
 
     for line in lines:
         if not line:
@@ -114,7 +143,7 @@ def split_into_sections(text):
                 current_lines.append("")
             continue
 
-        if is_section_header(line):
+        if is_section_header(line, previous_line=previous_line):
             if current_lines:
                 sections.append({
                     "section": current_title,
@@ -122,9 +151,11 @@ def split_into_sections(text):
                 })
             current_title = line
             current_lines = []
+            previous_line = line
             continue
 
         current_lines.append(line)
+        previous_line = line
 
     if current_lines:
         sections.append({

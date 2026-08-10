@@ -21,6 +21,14 @@ SUMMARY_QUERIES = {
 	"limitations": "What limitations, costs, or failure cases does this paper report?",
 }
 
+SUMMARY_SECTION_HINTS = {
+	"problem": ["introduction", "abstract", "background"],
+	"method": ["method", "methods", "star methods", "materials and methods", "approach"],
+	"dataset": ["dataset", "data", "materials and methods", "experiments"],
+	"results": ["results", "experiments", "evaluation", "discussion"],
+	"limitations": ["limitations", "discussion", "conclusion", "future work", "outlook"],
+}
+
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)

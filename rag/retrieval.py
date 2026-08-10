@@ -1,4 +1,5 @@
 from rag.answer import generate_answer_by_mode
+from rag.config import SUMMARY_SECTION_HINTS
 from rag.planner import plan_query
 from rag.retriever import retrieve
 
@@ -23,12 +24,10 @@ def retrieve_top_k(query, k=5, document_id=None):
     return retrieve(route, query, k=k, document_id=document_id)
 
 
-def answer_query(user_query, top_k=5, document_id=None, answer_mode="extractive"):
+def build_answer_result(query, results, answer_mode="extractive"):
     """
-    Answers a user query from retrieved evidence in the vector store.
+    Builds the answer/evidence dict for a query from already-retrieved docs.
     """
-    results = retrieve_top_k(user_query, k=top_k, document_id=document_id)
-
     evidence_snippets = []
     chunk_ids = []
     sections = []
@@ -57,10 +56,10 @@ def answer_query(user_query, top_k=5, document_id=None, answer_mode="extractive"
             }
         )
 
-    answer = generate_answer_by_mode(user_query, evidence_items, answer_mode=answer_mode)
+    answer = generate_answer_by_mode(query, evidence_items, answer_mode=answer_mode)
 
     return {
-        "query": user_query,
+        "query": query,
         "answer": answer,
         "evidence_snippets": evidence_snippets,
         "chunk_ids": chunk_ids,
@@ -68,6 +67,14 @@ def answer_query(user_query, top_k=5, document_id=None, answer_mode="extractive"
         "sources": sources,
         "document_ids": document_ids,
     }
+
+
+def answer_query(user_query, top_k=5, document_id=None, answer_mode="extractive"):
+    """
+    Answers a user query from retrieved evidence in the vector store.
+    """
+    results = retrieve_top_k(user_query, k=top_k, document_id=document_id)
+    return build_answer_result(user_query, results, answer_mode=answer_mode)
 
 
 def generate_schema(query, k=3, document_id=None, answer_mode="extractive"):
@@ -84,19 +91,14 @@ def retrieve_summary_evidence(summary_queries, top_k=5, document_id=None):
     summary_evidence = {}
 
     for field, query in summary_queries.items():
-        retrieved_docs = retrieve_top_k(query, k=top_k, document_id=document_id)
+        route = route_query(query)
+        section_hint = SUMMARY_SECTION_HINTS.get(field)
+        if section_hint:
+            route.section_filter = section_hint
+        retrieved_docs = retrieve(route, query, k=top_k, document_id=document_id)
         summary_evidence[field] = {
             "query": query,
-            "retrieved_chunks": [
-                {
-                    "chunk_id": doc.metadata.get("chunk_id"),
-                    "document_id": doc.metadata.get("document_id"),
-                    "source": doc.metadata.get("source"),
-                    "section": doc.metadata.get("section"),
-                    "evidence": doc.page_content[:400],
-                }
-                for doc in retrieved_docs
-            ],
+            "retrieved_docs": retrieved_docs,
         }
 
     return summary_evidence
@@ -104,19 +106,13 @@ def retrieve_summary_evidence(summary_queries, top_k=5, document_id=None):
 
 def build_summary_dict(summary_evidence, answer_mode="extractive"):
     """
-    Builds the high-level summary dictionary used for the MVP.
+    Builds the high-level summary dictionary used for the MVP, generating
+    each field's answer from the docs already retrieved for it rather than
+    re-planning and re-retrieving from scratch.
     """
     summary = {}
 
     for field, payload in summary_evidence.items():
-        document_id = None
-        if payload["retrieved_chunks"]:
-            document_id = payload["retrieved_chunks"][0].get("document_id")
-        summary[field] = answer_query(
-            payload["query"],
-            top_k=len(payload["retrieved_chunks"]),
-            document_id=document_id,
-            answer_mode=answer_mode,
-        )
+        summary[field] = build_answer_result(payload["query"], payload["retrieved_docs"], answer_mode=answer_mode)
 
     return summary

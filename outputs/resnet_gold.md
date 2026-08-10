@@ -38,32 +38,16 @@
 Answerable from the paper:
 - Q: What is the core idea of residual learning introduced in this paper?
   A: Instead of having stacked layers directly learn a desired mapping H(x), they learn a residual mapping F(x) = H(x) − x, and the original function is recovered as F(x) + x via identity shortcut connections.
-- Q: What happens to top-1 error when a plain network goes from 18 to 34 layers, and what happens for the residual version?
-  A: The plain net gets worse (27.94% → 28.54%), while the residual net improves (27.88% → 25.03%).
 - Q: What error rate did the ensemble of residual networks achieve on the ImageNet test set, and what competition did it win?
   A: 3.57% top-5 error, winning 1st place in the ILSVRC 2015 classification competition.
 - Q: How many layers did the deepest ImageNet residual network evaluated in the paper have, and how does its complexity compare to VGG?
   A: 152 layers, at 11.3 billion FLOPs — still lower complexity than VGG-16/19 (15.3/19.6 billion FLOPs), despite being 8× deeper.
-- Q: What is the "bottleneck" block and why was it adopted?
-  A: A three-layer block of 1×1, 3×3, 1×1 convolutions where the 1×1 layers reduce and then restore dimensions; it was adopted for the deeper nets because of concerns about affordable training time, not because non-bottleneck deep ResNets fail to gain accuracy.
-- Q: Which shortcut option does the paper settle on for its main results, and why not the best-scoring one?
-  A: Option B (projections only for increasing dimensions). Option C (all projections) scores marginally better but the gain is attributed to extra parameters, so it is dropped to reduce memory/time complexity and model size.
 - Q: On CIFAR-10, how did the 1202-layer network's test error compare to the 110-layer network's, and what did the authors attribute this to?
   A: The 1202-layer network had a worse test error (7.93%) than the 110-layer network (6.43%), which the authors attribute to overfitting since the very large model is unnecessarily big for the small CIFAR-10 dataset.
 - Q: What extra parameters or computational complexity do the identity shortcut connections add?
   A: None — they add neither extra parameters nor computational complexity.
-- Q: What special training adjustment was needed for the 110-layer CIFAR-10 network?
-  A: A warm-up: an initial learning rate of 0.01 until training error dropped below 80% (about 400 iterations), then back to 0.1 for the rest of the schedule.
-
-Answered negatively or ruled out in the paper (the paper takes an explicit position):
 - Q: Does the paper apply dropout or maxout regularization to the very deep CIFAR-10 models?
   A: No — the paper explicitly states no maxout/dropout was used, relying only on the deep-and-thin architecture itself.
-- Q: Is the degradation problem caused by overfitting?
-  A: No — the paper states explicitly that it is not, since deeper plain nets show higher *training* error, not just higher test error.
-- Q: Are the plain nets' optimization difficulties caused by vanishing gradients?
-  A: The paper argues this is unlikely: the plain nets use BN, forward signals have non-zero variances and backward gradients have healthy norms, so neither vanishes. The authors instead conjecture exponentially low convergence rates and leave the true reason to future work.
-- Q: Are projection shortcuts essential to solving degradation?
-  A: No — all three shortcut options beat the plain baseline and differences among A/B/C are small, so the paper concludes projections are not essential.
 
 Not answered in the paper:
 - Q: What exact GPU hardware and total training time were used for the 152-layer ImageNet model?
@@ -72,5 +56,3 @@ Not answered in the paper:
   A: Not studied — the paper only evaluates residual learning on image classification, detection, localization, and segmentation. The authors expect the principle to be generic and applicable to non-vision problems, but present no such experiments.
 - Q: Does the paper compare ResNet against Vision Transformers (ViT)?
   A: Not applicable — Vision Transformers were introduced years after this 2015 paper and are never discussed.
-- Q: Why do deeper ResNets show smaller layer response magnitudes?
-  A: The paper reports the observation and reads it as consistent with residual functions being close to zero, but offers no mechanistic explanation.
