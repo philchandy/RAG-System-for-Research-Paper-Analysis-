@@ -71,6 +71,10 @@ def build_grounded_answer_prompt(question, evidence_items):
             "Cite chunk IDs for every factual claim using the exact chunk ID in brackets, like [bert_chunk_0010].",
             "Do not use outside knowledge.",
             "Do not guess.",
+            "If the evidence names a specific tool, algorithm, model, or metric, or gives a specific "
+            "number, state that exact name or value verbatim in your answer — do not paraphrase or "
+            "describe it only in general terms. A vague description that omits a name or number the "
+            "evidence actually states is an incomplete answer, even if it is not technically wrong.",
             "Keep the answer concise and easy to scan.",
             "Use short paragraphs. When presenting multiple distinct ideas, use a numbered or bulleted list with one idea per line.",
             "",

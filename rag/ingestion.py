@@ -46,19 +46,15 @@ def trim_back_matter(text):
     """
     Removes references and appendix content from extracted paper text.
     """
-    cut_patterns = [
-        r"\nReferences\b",
-        r"\nREFERENCES\b",
-        r"\nAppendix\b",
-        r"\nAPPENDIX\b",
-        r"\nAppendix for",
-    ]
+    header_words = ["References", "REFERENCES", "Appendix", "APPENDIX"]
 
     cut_index = len(text)
-    for pattern in cut_patterns:
-        match = re.search(pattern, text)
-        if match:
-            cut_index = min(cut_index, match.start())
+    for word in header_words:
+        for match in re.finditer(rf"\n{word}\b[^\n]*", text):
+            line = match.group().lstrip("\n")
+            if len(line) <= 30:
+                cut_index = min(cut_index, match.start())
+                break
 
     return text[:cut_index].strip()
 
