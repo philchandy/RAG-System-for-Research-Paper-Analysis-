@@ -166,6 +166,8 @@ def print_evaluation(evaluation, gold_path):
 
     for field, metrics in evaluation.items():
         print(f"\n{field.upper()}:")
+        if metrics.get("generated_answer"):
+            print("Summary:", metrics["generated_answer"])
         print("Coverage:", metrics["coverage"])
         print("Hallucination:", metrics["hallucination"])
         if metrics["matched_keywords"]:

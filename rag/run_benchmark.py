@@ -11,6 +11,14 @@ BENCHMARK_PAIRS = [
     (DATA_DIR / "bert.pdf", OUTPUTS_DIR / "bert_gold.md"),
     (DATA_DIR / "optogenetic_rescue.pdf", OUTPUTS_DIR / "optogenetic_rescue_gold.md"),
     (DATA_DIR / "smart_microscopy.pdf", OUTPUTS_DIR / "smart_microscopy_gold.md"),
+    (DATA_DIR / "rag_retrieval_review.pdf", OUTPUTS_DIR / "rag_retrieval_review_gold.md"),
+    (DATA_DIR / "convergence_adam.pdf", OUTPUTS_DIR / "convergence_adam_gold.md"),
+    (DATA_DIR / "economic_impacts_gen_ai.pdf", OUTPUTS_DIR / "economic_impacts_gen_ai_gold.md"),
+    (DATA_DIR / "gravitational_waves.pdf", OUTPUTS_DIR / "gravitational_waves_gold.md"),
+    (DATA_DIR / "nanomaterials.pdf", OUTPUTS_DIR / "nanomaterials_gold.md"),
+    (DATA_DIR / "pneumonia_detection.pdf", OUTPUTS_DIR / "pneumonia_detection_gold.md"),
+    (DATA_DIR / "primes_math.pdf", OUTPUTS_DIR / "primes_math_gold.md"),
+    (DATA_DIR / "resnet.pdf", OUTPUTS_DIR / "resnet_gold.md"),
 ]
 
 LOG_PATH = BASE_DIR / "log.log"
@@ -68,6 +76,8 @@ def print_paper_evaluation(pdf_path, evaluation):
 
     for field, metrics in evaluation.items():
         logger.info(f"{field}: coverage={metrics['coverage']}, hallucination={metrics['hallucination']}")
+        if metrics.get("generated_answer"):
+            logger.info(f"  summary: {metrics['generated_answer']}")
         if metrics["matched_keywords"]:
             logger.info(f"  matched_keywords ({len(metrics['matched_keywords'])}): {metrics['matched_keywords']}")
         if metrics.get("reason"):

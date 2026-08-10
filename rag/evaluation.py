@@ -173,9 +173,11 @@ def evaluate_summary_dict(summary_dict, gold_references, judge_fn=None):
     for field_name, generated_field in summary_dict.items():
         if judge_fn:
             gold_bullets = gold_references.get(field_name, [])
-            evaluation[field_name] = judge_fn(field_name, generated_field, gold_bullets)
+            metrics = judge_fn(field_name, generated_field, gold_bullets)
         else:
-            evaluation[field_name] = score_field_against_gold(field_name, generated_field, gold_references)
+            metrics = score_field_against_gold(field_name, generated_field, gold_references)
+        metrics["generated_answer"] = generated_field.get("answer", "")
+        evaluation[field_name] = metrics
     return evaluation
 
 def load_followup_questions(gold_path):

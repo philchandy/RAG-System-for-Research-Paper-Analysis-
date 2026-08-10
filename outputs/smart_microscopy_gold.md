@@ -8,7 +8,7 @@
 ## method
 - The authors developed PyCLM (Closed-Loop Microscopy in Python), which combines MicroManager for fluorescent image acquisition and hardware/optogenetic control, Cellpose for real-time cell and embryo segmentation, and control of a digital micromirror device for optogenetic stimulation.
 - The software architecture uses a master scheduler that coordinates five independently threaded module classes (microscope manager, microscope outbox, segmentation module, pattern module, pattern manager), enabling closed-loop feedback between measurement and stimulation without end-user programming. Experiments are configured using readable TOML files and a position list rather than by writing code.
-- PyCLM was applied to three demonstration use cases: (1) bang-bang feedback control of TagRFP-H2B nuclear fluorescence across around 1,000 single MCF10A cells; (2) segmentation-based, scale- and rotation-corrected delivery of anterior-posterior optogenetic patterns to randomly oriented OptoSOS Drosophila embryos; and (3) subcellular ("vortex") versus supracellular (rotating-bar/traveling-wave) OptoEGFR stimulation of MDCK and MCF10A epithelial monolayers to compare resulting tissue migration.
+- PyCLM was applied to three demonstration use cases: (1) bang-bang feedback control of TagRFP-H2B nuclear fluorescence across around 1,000 single MCF10A cells; (2) segmentation-based, scale- and rotation-corrected delivery of anterior-posterior optogenetic patterns to randomly oriented OptoSOS Drosophila embryos; and (3) subcellular ("vortex") versus supracellular (rotating-bar) OptoEGFR stimulation of MDCK epithelial monolayers to compare resulting tissue migration, plus a traveling-wave-speed replication of the migration-direction effect in MCF10A monolayers.
 - Tissue and cell movement were quantified using segmentation-based tracking, including coefficient of variation of fluorescence, tangential/mean cell velocities, and velocity/cell-area analyses referenced to the phase of the traveling light wave at each cell's position.
 
 ## dataset
@@ -42,11 +42,13 @@ Answerable from the paper:
   A: 6.06 ± 1.95 µm/h vs 3.40 ± 1.82 µm/h (p = 0.046, paired t test).
 - Q: What file format is used to configure PyCLM experiments?
   A: TOML files, together with a position list.
+- Q: Is PyCLM's code publicly available, and where can it be found?
+  A: Yes — the code has been deposited at https://github.com/Harrison-Oatman/PyCLM and is publicly available as of the date of publication, with an archived copy referenced via a Zenodo DOI in the Key Resources Table.
 
 Not answered in the paper:
 - Q: Has PyCLM been tested on human tumor organoids?
   A: Not mentioned — the demonstrated systems are MCF10A and MDCK cell lines and Drosophila embryos.
-- Q: Is PyCLM open source, and under what license is it released?
-  A: Not covered in the paper's described content.
+- Q: Under what specific software license (e.g., MIT, GPL, BSD) is PyCLM released?
+  A: Not specified — the paper states the code is publicly available on GitHub and archived via Zenodo, but never names a specific software license.
 - Q: Does PyCLM support multi-photon excitation microscopy?
   A: Not discussed in the paper.
