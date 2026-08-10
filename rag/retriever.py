@@ -122,20 +122,27 @@ def filter_documents_by_section(documents, section_filter):
     return [doc for doc in documents if section_matches(doc.metadata.get("section"), section_filter)]
 
 
+SECTION_MATCH_BOOST = 0.2
+
+
 def section_boosted_rerank(query, documents, section_filter, limit):
     """
     Reranks by relevance, preferring section-filter matches without discarding
     non-matching documents.
     """
     scored_documents = score_with_cross_encoder(query, documents)
-    ranked_documents = sorted(
-        scored_documents,
-        key=lambda item: (
-            section_matches(item[0].metadata.get("section"), section_filter),
-            float(item[1]),
-        ),
-        reverse=True,
-    )
+    scores = [float(score) for _, score in scored_documents]
+    lo, hi = min(scores), max(scores)
+    span = (hi - lo) or 1.0
+
+    def combined_score(item):
+        doc, score = item
+        normalized = (float(score) - lo) / span
+        if section_matches(doc.metadata.get("section"), section_filter):
+            normalized += SECTION_MATCH_BOOST
+        return normalized
+
+    ranked_documents = sorted(scored_documents, key=combined_score, reverse=True)
 
     return [doc for doc, _ in ranked_documents[:limit]]
 
@@ -163,6 +170,23 @@ def retrieve_front_matter(vector_store, document_id=None):
         if metadata.get("section") == "Front Matter"
     ]
     return front_matter_docs
+
+
+HEADLINE_SECTION_TERMS = ["abstract", "summary", "front matter"]
+
+
+def retrieve_headline_chunks(vector_store, document_id=None):
+    """
+    Returns every chunk from a paper's abstract/summary.
+    """
+    where_filter = make_document_filter(document_id)
+    stored = vector_store.get(where=where_filter, include=["documents", "metadatas"])
+
+    return [
+        Document(page_content=text, metadata=metadata)
+        for text, metadata in zip(stored.get("documents", []), stored.get("metadatas", []))
+        if section_matches(metadata.get("section"), HEADLINE_SECTION_TERMS)
+    ]
 
 
 def retrieve_metadata_route(vector_store, route, document_id=None):
@@ -198,6 +222,13 @@ def retrieve(route, question, k=5, document_id=None):
         search_filter=search_filter,
         document_ids=document_id,
     )
+
+    if route.section_filter:
+        seen_chunk_ids = {doc.metadata.get("chunk_id") for doc in results}
+        results = results + [
+            doc for doc in retrieve_headline_chunks(vector_store, document_id=document_id)
+            if doc.metadata.get("chunk_id") not in seen_chunk_ids
+        ]
 
     if not results:
         return []

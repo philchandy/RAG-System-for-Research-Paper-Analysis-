@@ -13,9 +13,6 @@ RERANKER_MODEL = "BAAI/bge-reranker-base"
 DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 150
 
-# Summary fields ask broad, multi-fact questions ("what method does this
-# paper use?") that need to cover more ground than a single-fact follow-up
-# question, so they get a larger evidence budget.
 SUMMARY_TOP_K = 8
 
 SUMMARY_QUERIES = {
@@ -27,10 +24,10 @@ SUMMARY_QUERIES = {
 }
 
 SUMMARY_SECTION_HINTS = {
-	"problem": ["introduction", "abstract", "background", "motivation"],
-	"method": ["method", "methods", "star methods", "materials and methods", "approach", "model", "system design", "architecture"],
-	"dataset": ["dataset", "data", "materials and methods", "experiments", "summary statistics", "sample"],
-	"results": ["results", "experiments", "evaluation", "discussion", "findings"],
+	"problem": ["introduction", "abstract", "background", "motivation", "summary", "front matter"],
+	"method": ["method", "methods", "star methods", "materials and methods", "approach", "model", "system design", "architecture", "abstract", "summary"],
+	"dataset": ["dataset", "data", "materials and methods", "experiments", "summary statistics", "sample", "abstract", "summary"],
+	"results": ["results", "experiments", "evaluation", "discussion", "findings", "abstract", "summary", "front matter"],
 	"limitations": ["limitations", "discussion", "conclusion", "future work", "outlook", "caveats"],
 }
 
