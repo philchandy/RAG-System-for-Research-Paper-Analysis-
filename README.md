@@ -2,6 +2,10 @@
 
 Command-line MVP for indexing research PDFs, retrieving relevant chunks, and answering questions with grounded evidence.
 
+## Demo
+
+![RAG web app demo](demoRAGwebapp.gif)
+
 ## Features
 
 - **PDF ingestion built for research papers** — PyMuPDF extraction with column-aware reading order for two-column layouts, ligature expansion, and automatic removal of references/appendices.
