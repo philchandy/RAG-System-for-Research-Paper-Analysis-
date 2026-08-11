@@ -1,6 +1,6 @@
 # A Retrieval Augmented Generation System for Research Paper Analysis
 
-Command-line MVP for indexing research PDFs, retrieving relevant chunks, and answering questions with grounded evidence.
+A retrieval-augmented research paper analysis system with web and command-line interfaces. It indexes PDFs, combines semantic and lexical retrieval, and produces grounded answers and structured summaries with supporting evidence.
 
 ## Demo
 
