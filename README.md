@@ -1,4 +1,4 @@
-# CS6180 RAG MVP
+# A Retrieval Augmented Generation System for Research Paper Analysis
 
 Command-line MVP for indexing research PDFs, retrieving relevant chunks, and answering questions with grounded evidence.
 
