@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import '../styles/components/GroundedAnswer.css'
 import EvidenceList from './EvidenceList'
 
-const CITATION_RE = /\[([^[\]]+)\]/g
-
 // Splits "intro: 1. foo 2. bar" style run-on enumerations into list items.
 // Only fires when the numbering starts at 1 and increments, to avoid
 // splitting on things like "Table 4." inside quoted evidence.
@@ -37,7 +35,6 @@ function parseBlocks(text) {
   const blocks = []
   let list = null
   let paragraph = []
-  let listHasBlankLine = false
 
   const flushParagraph = () => {
     if (paragraph.length) {
@@ -56,7 +53,7 @@ function parseBlocks(text) {
     const line = rawLine.trim()
     if (!line) {
       flushParagraph()
-      if (list) listHasBlankLine = true
+      flushList()
       continue
     }
 
@@ -71,12 +68,8 @@ function parseBlocks(text) {
         list = { type, items: [] }
       }
       list.items.push(ordered ? ordered[1] : unordered[1])
-      listHasBlankLine = false
-    } else if (list && !listHasBlankLine) {
-      list.items[list.items.length - 1] += ` ${line}`
     } else {
       flushList()
-      listHasBlankLine = false
       paragraph.push(line)
     }
   }
@@ -106,11 +99,17 @@ function renderInline(text, chunkIds, onCitationClick) {
   const nodes = []
   let cursor = 0
 
-  for (const match of text.matchAll(CITATION_RE)) {
-    const [full, id] = match
+  for (const match of text.matchAll(/\[([^\[\]]+)\]|\*\*(.+?)\*\*/g)) {
+    const [full, id, boldText] = match
     if (match.index > cursor) nodes.push(text.slice(cursor, match.index))
 
-    if (chunkIds.has(id)) {
+    if (boldText !== undefined) {
+      nodes.push(
+        <strong key={`bold-${match.index}`}>
+          {renderInline(boldText, chunkIds, onCitationClick)}
+        </strong>,
+      )
+    } else if (chunkIds.has(id)) {
       nodes.push(
         <button
           type="button"
