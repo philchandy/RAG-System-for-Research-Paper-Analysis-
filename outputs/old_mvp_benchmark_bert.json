@@ -1,0 +1,179 @@
+{
+  "system": "old_mvp_keyword_retrieval",
+  "suite_size": 1,
+  "skipped": [],
+  "aggregate": {
+    "papers_evaluated": 1,
+    "summary": {
+      "total": 5,
+      "correct": 5,
+      "accuracy": 1.0,
+      "hallucinated": 0,
+      "hallucination_rate": 0.0
+    },
+    "followups": {
+      "total": 8,
+      "correct": 2,
+      "accuracy": 0.25,
+      "hallucinated": 6,
+      "hallucination_rate": 0.75
+    }
+  },
+  "papers": [
+    {
+      "paper": "bert.pdf",
+      "summary": {
+        "problem": {
+          "coverage": "hit",
+          "hallucination": "no",
+          "matched_keywords": [
+            "language",
+            "limitation",
+            "major",
+            "pre-training",
+            "tasks",
+            "unidirectional"
+          ],
+          "generated_answer": "- The major limitation is that standard language models are unidirectional, and this limits the choice of architectures that can be used during pre-training. [chunk_0003 | 1 Introduction]"
+        },
+        "method": {
+          "coverage": "hit",
+          "hallucination": "no",
+          "matched_keywords": [
+            "all",
+            "bert",
+            "bidirectional",
+            "deep",
+            "language",
+            "objective",
+            "parameters",
+            "pre-trained",
+            "relationships",
+            "transformer",
+            "two"
+          ],
+          "generated_answer": "- We introduce a new language representation model called BERT , which stands for Bidirectional Encoder Representations from Transformers. [chunk_0001 | Abstract]\n- Language model pre-training has been shown to be effective for improving many natural language processing tasks (Dai and Le, 2015; Peters et al., 2018a; Radford et al., 2018; Howard and Ruder, 2018). [chunk_0002 | 1 Introduction]\n- The \ufb01ne-tuning approach, such as the Generative Pre-trained Transformer (OpenAI GPT) (Radford et al., 2018), introduces minimal task-speci\ufb01c parameters, and is trained on the downstream tasks by simply \ufb01ne-tuning allpretrained parameters. [chunk_0003 | 1 Introduction]"
+        },
+        "dataset": {
+          "coverage": "hit",
+          "hallucination": "no",
+          "matched_keywords": [
+            "data",
+            "evaluation",
+            "glue",
+            "tasks"
+          ],
+          "generated_answer": "- The \u201cAverage\u201d column is slightly different than the of\ufb01cial GLUE score, since we exclude the problematic WNLI set.8BERT and OpenAI GPT are singlemodel, single task. [chunk_0025 | 4.1 GLUE]\n- With random restarts, we use the same pre-trained checkpoint but perform different \ufb01ne-tuning data shuf\ufb02ing and classi\ufb01er layer initialization.9 Results are presented in Table 1. [chunk_0026 | 4.1 GLUE]\n- Detailed descriptions of GLUE datasets are included in Appendix B.1. [chunk_0024 | 4.1 GLUE]"
+        },
+        "results": {
+          "coverage": "hit",
+          "hallucination": "no",
+          "matched_keywords": [
+            "bert",
+            "include",
+            "tasks",
+            "these"
+          ],
+          "generated_answer": "- We introduce a new language representation model called BERT , which stands for Bidirectional Encoder Representations from Transformers. [chunk_0001 | Abstract]\n- Language model pre-training has been shown to be effective for improving many natural language processing tasks (Dai and Le, 2015; Peters et al., 2018a; Radford et al., 2018; Howard and Ruder, 2018). [chunk_0002 | 1 Introduction]\n- The \ufb01ne-tuning approach, such as the Generative Pre-trained Transformer (OpenAI GPT) (Radford et al., 2018), introduces minimal task-speci\ufb01c parameters, and is trained on the downstream tasks by simply \ufb01ne-tuning allpretrained parameters. [chunk_0003 | 1 Introduction]"
+        },
+        "limitations": {
+          "coverage": "hit",
+          "hallucination": "no",
+          "matched_keywords": [
+            "are",
+            "because",
+            "large",
+            "self-attention"
+          ],
+          "generated_answer": "- To train sentence representations, prior work has used objectives to rank candidate next sentences (Jernite et al., 2017; Logeswaran and Lee, 2018), left-to-right generation of next sentence words given a representation of the previous sentence (Kiros et al., 2015), or denoising autoencoder derived objectives (Hill et al., 2016). [chunk_0007 | 2.1 Unsupervised Feature-based Approaches]\n- There has also been work showing effective transfer from supervised tasks with large datasets, such as natural language inference (Conneau et al., 2017) and machine translation (McCann et al., 2017). [chunk_0011 | 2.3 Transfer Learning from Supervised Data]\n- (2017) as well as excellent guides such as \u201cThe Annotated Transformer.\u201d2 In this work, we denote the number of layers (i.e., Transformer blocks) as L, the hidden size as H, and the number of self-attention heads as A.3 We primarily report results on two model sizes: BERT BASE (L=12, H=768, A=12, Total Parameters=110M) and BERT LARGE (L=24, H=1024, A=16, Total Parameters=340M). [chunk_0013 | 3 BERT]"
+        }
+      },
+      "followups": [
+        {
+          "question": "How many parameters does BERT_LARGE have?",
+          "reference_answer": "340M parameters (L=24, H=1024, A=16).",
+          "answerable": true,
+          "generated_answer": "- As with the feature-based approaches, the \ufb01rst works in this direction only pre-trained word embedding parameters from unlabeled text (Collobert and Weston, 2008). [chunk_0009 | 2.2 Unsupervised Fine-tuning Approaches]\n- All of the BERT results presented so far have used the \ufb01ne-tuning approach, where a simple classi\ufb01cation layer is added to the pre-trained model, and all parameters are jointly \ufb01ne-tuned on a downstream task. [chunk_0038 | 5.3 Feature-based Approach with BERT]\n- The same pre-trained model parameters are used to initialize models for different down-stream tasks. [chunk_0010 | 2.2 Unsupervised Fine-tuning Approaches]\n- (2017) as well as excellent guides such as \u201cThe Annotated Transformer.\u201d2 In this work, we denote the number of layers (i.e., Transformer blocks) as L, the hidden size as H, and the number of self-attention heads as A.3 We primarily report results on two model sizes: BERT BASE (L=12, H=768, A=12, Total Parameters=110M) and BERT LARGE (L=24, H=1024, A=16, Total Parameters=340M). [chunk_0013 | 3 BERT]\n- Fine-tuning is straightforward since the selfattention mechanism in the Transformer allows BERT to model many downstream tasks\u2014 whether they involve single text or text pairs\u2014by swapping out the appropriate inputs and outputs. [chunk_0021 | 3.2 Fine-tuning BERT]",
+          "expected": "answer",
+          "correct": true,
+          "hallucination": "no",
+          "matched_keywords": [
+            "parameters"
+          ]
+        },
+        {
+          "question": "Besides masked language modeling, what other pre-training objective does BERT use?",
+          "reference_answer": "Next sentence prediction (NSP), which pre-trains relationships between sentence pairs.",
+          "answerable": true,
+          "generated_answer": "- We introduce BERT and its detailed implementation in this section. [chunk_0012 | 3 BERT]\n- (2017) as well as excellent guides such as \u201cThe Annotated Transformer.\u201d2 In this work, we denote the number of layers (i.e., Transformer blocks) as L, the hidden size as H, and the number of self-attention heads as A.3 We primarily report results on two model sizes: BERT BASE (L=12, H=768, A=12, Total Parameters=110M) and BERT LARGE (L=24, H=1024, A=16, Total Parameters=340M). [chunk_0013 | 3 BERT]\n- 4We note that in the literature the bidirectional TransInput/Output Representations To make BERT handle a variety of down-stream tasks, our input representation is able to unambiguously represent both a single sentence and a pair of sentences (e.g.,hQuestion, Answeri) in one token sequence. [chunk_0014 | 3 BERT]\n- As shown in Figure 1, we denote input embedding as E, the \ufb01nal hidden vector of the special [CLS] token asC2RH, and the \ufb01nal hidden vector for the ithinput token asTi2RH. [chunk_0015 | 3 BERT]\n- (2018), we do not use traditional left-to-right or right-to-left language models to pre-train BERT. [chunk_0016 | 3.1 Pre-training BERT]",
+          "expected": "answer",
+          "correct": true,
+          "hallucination": "no",
+          "matched_keywords": [
+            "sentence"
+          ]
+        },
+        {
+          "question": "What F1 score does BERT report on SQuAD v1.1?",
+          "reference_answer": "93.2 F1.",
+          "answerable": true,
+          "generated_answer": "- The Stanford Question Answering Dataset (SQuAD v1.1) is a collection of 100k crowdsourced question/answer pairs (Rajpurkar et al., 2016). [chunk_0027 | 4.2 SQuAD v1.1]\n- In fact, our single BERT model outperforms the top ensemble system in terms of F1 score. [chunk_0028 | 4.2 SQuAD v1.1]\n- We use a simple approach to extend the SQuAD v1.1 BERT model for this task. [chunk_0030 | 4.3 SQuAD v2.0]\n- It obtains new state-of-the-art results on eleven natural language processing tasks, including pushing the GLUE score to 80.5% (7.7% point absolute improvement), MultiNLI accuracy to 86.7% (4.6% absolute improvement), SQuAD v1.1 question answering Test F1 to 93.2 (1.5 point absolute improvement) and SQuAD v2.0 Test F1 to 83.1 (5.1 point absolute improvement). [chunk_0001 | Abstract]\n- 7For example, the BERT SQuAD model can be trained in around 30 minutes on a single Cloud TPU to achieve a Dev F1 score of 91.0%. [chunk_0024 | 4.1 GLUE]",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        },
+        {
+          "question": "What two corpora were used for pre-training?",
+          "reference_answer": "BooksCorpus (about 800M words) and English Wikipedia (about 2,500M words).",
+          "answerable": true,
+          "generated_answer": "- Task #2: Next Sentence Prediction (NSP) Many important downstream tasks such as Question Answering (QA) and Natural Language Inference (NLI) are based on understanding the relationship between two sentences, which is not directly captured by language modeling. [chunk_0018 | 3.1 Pre-training BERT]\n- Language model pre-training has been shown to be effective for improving many natural language processing tasks (Dai and Le, 2015; Peters et al., 2018a; Radford et al., 2018; Howard and Ruder, 2018). [chunk_0002 | 1 Introduction]\n- The two approaches share the same objective function during pre-training, where they use unidirectional language models to learn general language representations. [chunk_0003 | 1 Introduction]\n- There are two steps in our framework: pre-training and \ufb01ne-tuning . [chunk_0012 | 3 BERT]\n- BERT instead uses the self-attention mechanism to unify these two stages, as encoding a concatenated text pair with self-attention effectively includes bidirectional cross attention between two sentences. [chunk_0021 | 3.2 Fine-tuning BERT]",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        },
+        {
+          "question": "Why can fine-tuning BERT_LARGE be unstable?",
+          "reference_answer": "On small datasets it is sometimes unstable, requiring random restarts.",
+          "answerable": true,
+          "generated_answer": "- As a result, the pre-trained BERT model can be \ufb01netuned with just one additional output layer to create state-of-the-art models for a wide range of tasks, such as question answering and language inference, without substantial taskspeci\ufb01c architecture modi\ufb01cations. [chunk_0001 | Abstract]\n- The major limitation is that standard language models are unidirectional, and this limits the choice of architectures that can be used during pre-training. [chunk_0003 | 1 Introduction]\n- TokM Masked Sentence A Masked Sentence B Pre-training Fine-Tuning NSP Mask LM Mask LM Unlabeled Sentence A and B Pair SQuAD Question Answer Pair NER MNLI Figure 1: Overall pre-training and \ufb01ne-tuning procedures for BERT. [chunk_0009 | 2.2 Unsupervised Fine-tuning Approaches]\n- Fine-tuning is straightforward since the selfattention mechanism in the Transformer allows BERT to model many downstream tasks\u2014 whether they involve single text or text pairs\u2014by swapping out the appropriate inputs and outputs. [chunk_0021 | 3.2 Fine-tuning BERT]\n- All of the results in the paper can be replicated in at most 1 hour on a single Cloud TPU, or a few hours on a GPU, starting from the exact same pre-trained model.7We describe the task-speci\ufb01c details in the corresponding subsections of Section 4. [chunk_0022 | 3.2 Fine-tuning BERT]",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        },
+        {
+          "question": "What is the carbon footprint or energy cost of pre-training BERT?",
+          "reference_answer": "Not reported in the paper.",
+          "answerable": false,
+          "generated_answer": "- [CLS] helikesplay## ing[SEP] mydogiscute[SEP]Input E[CLS] Ehe Elikes Eplay E## ing E[SEP] Emy Edog Eis Ecute E[SEP] Token Embeddings EA EB EB EB EB EB EA EA EA EA EASegment Embeddings E0 E6 E7 E8 E9 E10 E1 E2 E3 E4 E5Position Embeddings Figure 2: BERT input representation. [chunk_0019 | 3.1 Pre-training BERT]\n- We introduce BERT and its detailed implementation in this section. [chunk_0012 | 3 BERT]\n- Fine-tuning is straightforward since the selfattention mechanism in the Transformer allows BERT to model many downstream tasks\u2014 whether they involve single text or text pairs\u2014by swapping out the appropriate inputs and outputs. [chunk_0021 | 3.2 Fine-tuning BERT]\n- BERT alleviates the previously mentioned unidirectionality constraint by using a \u201cmasked language model\u201d (MLM) pre-training objective, inspired by the Cloze task (Taylor, 1953). [chunk_0004 | 1 Introduction]\n- TokM Masked Sentence A Masked Sentence B Pre-training Fine-Tuning NSP Mask LM Mask LM Unlabeled Sentence A and B Pair SQuAD Question Answer Pair NER MNLI Figure 1: Overall pre-training and \ufb01ne-tuning procedures for BERT. [chunk_0009 | 2.2 Unsupervised Fine-tuning Approaches]",
+          "expected": "refusal",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        },
+        {
+          "question": "How does BERT's performance compare to GPT-4 on GLUE?",
+          "reference_answer": "Not applicable \u2014 GPT-4 postdates this paper and is never discussed.",
+          "answerable": false,
+          "generated_answer": "- In this section, we present BERT \ufb01ne-tuning results on 11 NLP tasks. [chunk_0023 | 4 Experiments]\n- The General Language Understanding Evaluation (GLUE) benchmark (Wang et al., 2018a) is a collection of diverse natural language understanding tasks. [chunk_0024 | 4.1 GLUE]\n- System MNLI-(m/mm) QQP QNLI SST-2 CoLA STS-B MRPC RTE Average 392k 363k 108k 67k 8.5k 5.7k 3.5k 2.5k Pre-OpenAI SOTA 80.6/80.1 66.1 82.3 93.2 35.0 81.0 86.0 61.7 74.0 BiLSTM+ELMo+Attn 76.4/76.1 64.8 79.8 90.4 36.0 73.3 84.9 56.8 71.0 OpenAI GPT 82.1/81.4 70.3 87.4 91.3 45.4 80.0 82.3 56.0 75.1 BERT BASE 84.6/83.4 71.2 90.5 93.5 52.1 85.8 88.9 66.4 79.6 BERT LARGE 86.7/85.9 72.1 92.7 94.9 60.5 86.5 89.3 70.1 82.1 Table 1: GLUE Test results, scored by the evaluation server ( https://gluebenchmark.com/leaderboard ). [chunk_0025 | 4.1 GLUE]\n- For the largest and most widely reported GLUE task, MNLI, BERT obtains a 4.6% absolute accuracy improvement. [chunk_0026 | 4.1 GLUE]\n- Given a question and a passage from 9The GLUE data set distribution does not include the Test labels, and we only made a single GLUE evaluation server submission for each of BERT BASE and BERT LARGE . [chunk_0027 | 4.2 SQuAD v1.1]",
+          "expected": "refusal",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        },
+        {
+          "question": "Under what license is the BERT codebase released?",
+          "reference_answer": "Not covered in the paper text.",
+          "answerable": false,
+          "generated_answer": "- (2017) and released in thetensor2tensor library.1Because the use of Transformers has become common and our implementation is almost identical to the original, we will omit an exhaustive background description of the model architecture and refer readers to Vaswani et al. [chunk_0013 | 3 BERT]\n- We introduce BERT and its detailed implementation in this section. [chunk_0012 | 3 BERT]\n- 4We note that in the literature the bidirectional TransInput/Output Representations To make BERT handle a variety of down-stream tasks, our input representation is able to unambiguously represent both a single sentence and a pair of sentences (e.g.,hQuestion, Answeri) in one token sequence. [chunk_0014 | 3 BERT]\n- (2018), we do not use traditional left-to-right or right-to-left language models to pre-train BERT. [chunk_0016 | 3.1 Pre-training BERT]\n- [CLS] helikesplay## ing[SEP] mydogiscute[SEP]Input E[CLS] Ehe Elikes Eplay E## ing E[SEP] Emy Edog Eis Ecute E[SEP] Token Embeddings EA EB EB EB EB EB EA EA EA EA EASegment Embeddings E0 E6 E7 E8 E9 E10 E1 E2 E3 E4 E5Position Embeddings Figure 2: BERT input representation. [chunk_0019 | 3.1 Pre-training BERT]",
+          "expected": "refusal",
+          "correct": false,
+          "hallucination": "yes",
+          "matched_keywords": []
+        }
+      ]
+    }
+  ]
+}

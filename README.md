@@ -146,6 +146,16 @@ uv run python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file ou
 # or use --judge llm for an OpenAI judge, or --judge auto to select based on the answer mode
 ```
 
+Run the old keyword-retrieval MVP as a baseline across the full benchmark suite:
+
+```bash
+uv run python -m scripts.run_old_mvp_benchmark
+# or, with the venv activated
+python -m scripts.run_old_mvp_benchmark
+```
+
+The baseline runner reports summary accuracy, summary hallucination rate, follow-up accuracy, and follow-up hallucination rate. Detailed per-paper and per-question results are written to `outputs/old_mvp_benchmark.json`. Use `--paper bert` to evaluate one paper while testing changes.
+
 ## Notes
 
 - `--pdf` is required and accepts one or more paths; each PDF is indexed under its own document id.

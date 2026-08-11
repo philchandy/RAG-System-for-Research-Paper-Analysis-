@@ -1,0 +1,151 @@
+{
+  "system": "old_mvp_keyword_retrieval",
+  "suite_size": 1,
+  "skipped": [],
+  "aggregate": {
+    "papers_evaluated": 1,
+    "summary": {
+      "total": 5,
+      "correct": 0,
+      "accuracy": 0.0,
+      "hallucinated": 0,
+      "hallucination_rate": 0.0
+    },
+    "followups": {
+      "total": 9,
+      "correct": 3,
+      "accuracy": 0.3333333333333333,
+      "hallucinated": 0,
+      "hallucination_rate": 0.0
+    }
+  },
+  "papers": [
+    {
+      "paper": "smart_microscopy.pdf",
+      "summary": {
+        "problem": {
+          "coverage": "miss",
+          "hallucination": "no",
+          "matched_keywords": [],
+          "generated_answer": "I cannot find that in the uploaded document."
+        },
+        "method": {
+          "coverage": "miss",
+          "hallucination": "no",
+          "matched_keywords": [],
+          "generated_answer": "I cannot find that in the uploaded document."
+        },
+        "dataset": {
+          "coverage": "miss",
+          "hallucination": "no",
+          "matched_keywords": [],
+          "generated_answer": "I cannot find that in the uploaded document."
+        },
+        "results": {
+          "coverage": "miss",
+          "hallucination": "no",
+          "matched_keywords": [],
+          "generated_answer": "I cannot find that in the uploaded document."
+        },
+        "limitations": {
+          "coverage": "miss",
+          "hallucination": "no",
+          "matched_keywords": [],
+          "generated_answer": "I cannot find that in the uploaded document."
+        }
+      },
+      "followups": [
+        {
+          "question": "What software does PyCLM use for real-time cell segmentation?",
+          "reference_answer": "Cellpose.",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "How many independently threaded module classes does PyCLM's master scheduler coordinate?",
+          "reference_answer": "Five (microscope manager, microscope outbox, segmentation module, pattern module, pattern manager).",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "How many MCF10A cells were used in the single-cell feedback control experiment, and what marker did they express?",
+          "reference_answer": "1,127 cells expressing a TagRFP-H2B nuclear marker.",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "How much faster was tissue migration under fast (60 \u00b5m/h) versus slow (15 \u00b5m/h) EGFR waves in MDCK cells?",
+          "reference_answer": "6.06 \u00b1 1.95 \u00b5m/h vs 3.40 \u00b1 1.82 \u00b5m/h (p = 0.046, paired t test).",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "What file format is used to configure PyCLM experiments?",
+          "reference_answer": "TOML files, together with a position list.",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "Is PyCLM's code publicly available, and where can it be found?",
+          "reference_answer": "Yes \u2014 the code has been deposited at https://github.com/Harrison-Oatman/PyCLM and is publicly available as of the date of publication, with an archived copy referenced via a Zenodo DOI in the Key Resources Table.",
+          "answerable": true,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "answer",
+          "correct": false,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "Has PyCLM been tested on human tumor organoids?",
+          "reference_answer": "Not mentioned \u2014 the demonstrated systems are MCF10A and MDCK cell lines and Drosophila embryos.",
+          "answerable": false,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "refusal",
+          "correct": true,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "Under what specific software license (e.g., MIT, GPL, BSD) is PyCLM released?",
+          "reference_answer": "Not specified \u2014 the paper states the code is publicly available on GitHub and archived via Zenodo, but never names a specific software license.",
+          "answerable": false,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "refusal",
+          "correct": true,
+          "hallucination": "no",
+          "matched_keywords": []
+        },
+        {
+          "question": "Does PyCLM support multi-photon excitation microscopy?",
+          "reference_answer": "Not discussed in the paper.",
+          "answerable": false,
+          "generated_answer": "I cannot find that in the uploaded document.",
+          "expected": "refusal",
+          "correct": true,
+          "hallucination": "no",
+          "matched_keywords": []
+        }
+      ]
+    }
+  ]
+}
