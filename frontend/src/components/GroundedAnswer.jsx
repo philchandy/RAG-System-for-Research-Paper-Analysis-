@@ -37,6 +37,7 @@ function parseBlocks(text) {
   const blocks = []
   let list = null
   let paragraph = []
+  let listHasBlankLine = false
 
   const flushParagraph = () => {
     if (paragraph.length) {
@@ -55,7 +56,7 @@ function parseBlocks(text) {
     const line = rawLine.trim()
     if (!line) {
       flushParagraph()
-      flushList()
+      if (list) listHasBlankLine = true
       continue
     }
 
@@ -70,8 +71,12 @@ function parseBlocks(text) {
         list = { type, items: [] }
       }
       list.items.push(ordered ? ordered[1] : unordered[1])
+      listHasBlankLine = false
+    } else if (list && !listHasBlankLine) {
+      list.items[list.items.length - 1] += ` ${line}`
     } else {
       flushList()
+      listHasBlankLine = false
       paragraph.push(line)
     }
   }

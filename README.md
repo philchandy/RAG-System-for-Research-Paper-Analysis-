@@ -60,6 +60,18 @@ For OpenAI answer generation, create a `.env` file in the root folder:
 OPENAI_API_KEY=your_api_key_here
 ```
 
+## Run the frontend
+
+Keep the API server running, then open another terminal from the root folder and run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 in your browser. After the first installation, you only need `npm run dev` from the `frontend` folder.
+
 ## Run the app
 
 Run from the root folder. Every command below works two ways:
@@ -91,6 +103,14 @@ uv run python -m rag.app --pdf data/raw/your-paper.pdf --query "What methods doe
 python -m rag.app --pdf data/raw/your-paper.pdf --query "What methods does this paper use?"
 ```
 
+Assign a custom document id when indexing a single PDF:
+
+```bash
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --document-id my-paper
+# or
+python -m rag.app --pdf data/raw/your-paper.pdf --document-id my-paper
+```
+
 Use OpenAI for the final grounded answer:
 
 ```bash
@@ -115,9 +135,20 @@ uv run python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file ou
 python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md
 ```
 
+Choose how follow-up answers are judged during evaluation:
+
+```bash
+uv run python -m rag.app --pdf data/raw/your-paper.pdf --evaluate --gold-file outputs/bert_gold.md --judge keyword
+# or use --judge llm for an OpenAI judge, or --judge auto to select based on the answer mode
+```
+
 ## Notes
 
 - `--pdf` is required and accepts one or more paths; each PDF is indexed under its own document id.
+- `--query` asks one question and exits; without it, the app prints the five-part summary and then prompts for follow-up questions.
 - `--top-k` is optional; the retriever may internally broaden multi-query retrieval before reranking.
+- `--document-id` sets a custom id for one PDF only; otherwise, each id is derived from the PDF file name.
 - Default answer mode is `extractive`, which does not require an OpenAI API key.
 - Use `--answer-mode openai` only after setting `OPENAI_API_KEY`.
+- `--evaluate` enables benchmark scoring against the Markdown references selected by `--gold-file`.
+- `--judge` accepts `keyword`, `llm`, or `auto`. The default `auto` mode uses the LLM judge with `--answer-mode openai` and keyword overlap otherwise.
